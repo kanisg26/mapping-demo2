@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>コメント写真集 ｜ DEMO001（サンプル）</title>
+<style>
+  :root{
+    --bg:#0e1620; --panel:#16212e; --ink:#eef3f8; --muted:#8ea3b8;
+    --line:#2a3a4d; --accent:#46c6d6; --demo:#e2574c;
+    --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI","Noto Sans JP",sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans); line-height:1.5; padding-bottom:48px}
+  .wrap{max-width:560px; margin:0 auto; padding:0 16px}
+  .demobar{background:var(--demo); color:#fff; font-family:var(--mono); font-size:12.5px;
+    letter-spacing:.05em; font-weight:600; text-align:center; padding:7px 10px; position:sticky; top:0; z-index:5}
+  .top{display:flex; align-items:center; gap:12px; padding:18px 0 6px}
+  .back{color:var(--accent); text-decoration:none; font-size:22px; font-family:var(--mono)}
+  .top h1{font-size:17px; margin:0}
+  .top .xls{margin-left:auto; font-family:var(--mono); font-size:11.5px}
+  .top .xls a{color:var(--accent); text-decoration:none}
+
+  .meta{margin:14px 0 6px; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--panel)}
+  .meta div{display:grid; grid-template-columns:96px 1fr; border-bottom:1px solid var(--line)}
+  .meta div:last-child{border-bottom:0}
+  .meta dt{font-size:12px; color:var(--muted); padding:9px 12px; background:#111b26;
+    border-right:1px solid var(--line); margin:0; font-family:var(--mono)}
+  .meta dd{margin:0; padding:9px 12px; font-size:13.5px}
+  .meta dd.empty::after{content:"—"; color:var(--line)}
+
+  .list{margin-top:20px; display:flex; flex-direction:column; gap:16px}
+  .item{border:1px solid var(--line); border-radius:14px; overflow:hidden; background:var(--panel)}
+  .item .hd{display:flex; align-items:center; gap:12px; padding:12px 14px; border-bottom:1px solid var(--line)}
+  .item .no{width:30px; height:30px; flex:0 0 30px; border-radius:8px; background:#0f1a25;
+    border:1px solid var(--line); display:grid; place-items:center; font-family:var(--mono);
+    font-size:13px; color:var(--accent)}
+  .item .cm{font-size:15px; font-weight:600}
+  .ph{margin:14px; height:150px; border:1px dashed var(--line); border-radius:10px;
+    display:grid; place-items:center; color:var(--line); background:#0f1a25;
+    font-family:var(--mono); font-size:13px; letter-spacing:.08em}
+  .cap{padding:0 14px 12px; font-family:var(--mono); font-size:11px; color:var(--muted)}
+  footer{margin-top:28px; text-align:center; font-size:12px; color:var(--muted)}
+  footer a{color:var(--accent); text-decoration:none}
+</style>
+</head>
+<body>
+  <div class="demobar">サンプル写真（実データではありません）</div>
+  <div class="wrap">
+    <div class="top">
+      <a class="back" href="index.html">←</a>
+      <h1>コメント写真集</h1>
+      <span class="xls"><a href="photos.xlsx">Excel版 ↓</a></span>
+    </div>
+
+    <dl class="meta">
+      <div><dt>現場名</dt><dd class="empty"></dd></div>
+      <div><dt>取付管番号</dt><dd class="empty"></dd></div>
+      <div><dt>現場住所</dt><dd class="empty"></dd></div>
+      <div><dt>点検日</dt><dd class="empty"></dd></div>
+    </dl>
+
+    <div class="list">
+      <div class="item"><div class="hd"><span class="no">1</span><span class="cm">J1 GL</span></div><div class="ph">写真なし</div><div class="cap">写真データファイル名：—</div></div>
+      <div class="item"><div class="hd"><span class="no">2</span><span class="cm">J2 接続部</span></div><div class="ph">写真なし</div><div class="cap">写真データファイル名：—</div></div>
+      <div class="item"><div class="hd"><span class="no">3</span><span class="cm">J3 接続部</span></div><div class="ph">写真なし</div><div class="cap">写真データファイル名：—</div></div>
+      <div class="item"><div class="hd"><span class="no">4</span><span class="cm">J4 接続部</span></div><div class="ph">写真なし</div><div class="cap">写真データファイル名：—</div></div>
+      <div class="item"><div class="hd"><span class="no">5</span><span class="cm">J5 接続部</span></div><div class="ph">写真なし</div><div class="cap">写真データファイル名：—</div></div>
+      <div class="item"><div class="hd"><span class="no">6</span><span class="cm">J6 本管接続部</span></div><div class="ph">写真なし</div><div class="cap">写真データファイル名：—</div></div>
+    </div>
+
+    <footer><a href="index.html">← 取付管情報へ戻る</a></footer>
+  </div>
+</body>
+</html>

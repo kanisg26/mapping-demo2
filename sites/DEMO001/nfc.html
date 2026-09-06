@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>取付管ID NFCタグ ｜ DEMO001（サンプル）</title>
+<style>
+  :root{
+    --bg:#0e1620; --panel:#16212e; --panel2:#1c2a3a;
+    --ink:#eef3f8; --muted:#8ea3b8; --line:#2a3a4d;
+    --accent:#46c6d6; --warm:#f0a24b; --demo:#e2574c; --ok:#5fc48b;
+    --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace;
+    --sans:system-ui,-apple-system,"Segoe UI","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:radial-gradient(1200px 500px at 50% -10%, #17273a 0%, transparent 60%),var(--bg);
+    color:var(--ink); font-family:var(--sans);
+    -webkit-font-smoothing:antialiased; line-height:1.55; padding-bottom:56px;
+  }
+  .wrap{max-width:540px; margin:0 auto; padding:0 18px}
+
+  .demobar{
+    position:sticky; top:0; z-index:10; background:var(--demo); color:#fff;
+    font-size:12.5px; letter-spacing:.06em; font-weight:600;
+    text-align:center; padding:7px 10px; font-family:var(--mono);
+  }
+
+  header{padding:26px 0 4px; text-align:center}
+  .eyebrow{font-family:var(--mono); font-size:11.5px; letter-spacing:.22em;
+    color:var(--accent); text-transform:uppercase; margin:0 0 8px}
+  h1{font-size:15px; font-weight:600; color:var(--muted); margin:0 0 4px; letter-spacing:.02em}
+  .pipeno{font-family:var(--mono); font-size:26px; letter-spacing:.14em;
+    color:var(--ink); margin:2px 0 0; font-weight:600; word-break:break-all}
+  .pipeno.blank{color:var(--line)}
+
+  .src{margin:12px 0 0; font-family:var(--mono); font-size:11px; letter-spacing:.08em;
+    color:var(--muted); display:inline-flex; align-items:center; gap:7px;
+    border:1px solid var(--line); background:#111b26; border-radius:999px; padding:5px 12px}
+  .src .dot{width:6px; height:6px; border-radius:50%; background:var(--line); flex:0 0 6px}
+  .src.live .dot{background:var(--ok); box-shadow:0 0 0 3px rgba(95,196,139,.16)}
+  .src.url .dot{background:var(--accent); box-shadow:0 0 0 3px rgba(70,198,214,.16)}
+
+  .meta{margin:20px 0 4px; border:1px solid var(--line); border-radius:12px;
+    overflow:hidden; background:linear-gradient(180deg,var(--panel),#131e2a)}
+  .meta div{display:grid; grid-template-columns:104px 1fr; border-bottom:1px solid var(--line)}
+  .meta div:last-child{border-bottom:0}
+  .meta dt{font-size:12.5px; color:var(--muted); padding:11px 14px; background:#111b26;
+    margin:0; border-right:1px solid var(--line); font-family:var(--mono); letter-spacing:.04em}
+  .meta dd{margin:0; padding:11px 14px; font-size:14px; color:var(--ink); min-height:20px; word-break:break-all}
+  .meta dd.empty::after{content:"—"; color:var(--line)}
+
+  .section-label{font-family:var(--mono); font-size:11px; letter-spacing:.2em;
+    color:var(--muted); text-transform:uppercase;
+    margin:30px 2px 12px; display:flex; align-items:center; gap:10px}
+  .section-label::after{content:""; flex:1; height:1px; background:var(--line)}
+
+  .card{display:flex; align-items:center; gap:15px; text-decoration:none;
+    background:linear-gradient(180deg,var(--panel2),var(--panel));
+    border:1px solid var(--line); border-radius:14px; padding:16px;
+    color:var(--ink); transition:transform .15s ease, border-color .15s ease}
+  .card:active{transform:scale(.985)}
+  @media(hover:hover){.card:hover{border-color:var(--accent)}}
+  .card .ic{width:46px; height:46px; flex:0 0 46px; border-radius:11px; display:grid;
+    place-items:center; background:#0f1a25; border:1px solid var(--line)}
+  .card .ic svg{width:24px; height:24px}
+  .card h3{margin:0 0 2px; font-size:16px; font-weight:600}
+  .card p{margin:0; font-size:12.5px; color:var(--muted)}
+  .card .go{margin-left:auto; color:var(--accent); font-size:20px; font-family:var(--mono); opacity:.8}
+
+  .panel{border:1px solid var(--line); border-radius:14px; background:#111b26; padding:18px 16px}
+  .panel + .panel{margin-top:12px}
+
+  .btn{display:block; width:100%; border:1px solid var(--line); border-radius:11px;
+    background:linear-gradient(180deg,var(--panel2),var(--panel)); color:var(--ink);
+    font-family:var(--sans); font-size:15px; font-weight:600; padding:14px;
+    cursor:pointer; transition:border-color .15s ease, opacity .15s ease}
+  .btn:active{transform:scale(.99)}
+  .btn:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+  @media(hover:hover){.btn:hover:not(:disabled){border-color:var(--accent)}}
+  .btn:disabled{opacity:.4; cursor:not-allowed}
+  .btn.primary{border-color:#2f6f78; background:linear-gradient(180deg,#1d3f47,#163036); color:#bff0f6}
+  .btn.armed{border-color:var(--warm); color:#ffd9a8}
+  .btn + .btn{margin-top:9px}
+
+  .status{margin-top:12px; font-family:var(--mono); font-size:12px; line-height:1.65;
+    color:var(--muted); border-left:2px solid var(--line); padding:2px 0 2px 11px; word-break:break-word}
+  .status.ok{color:#a9e3c4; border-color:var(--ok)}
+  .status.err{color:#f3b0aa; border-color:var(--demo)}
+  .status.busy{color:#ffd9a8; border-color:var(--warm)}
+
+  .fields{display:flex; flex-direction:column; gap:10px}
+  label{display:block; font-family:var(--mono); font-size:11px; letter-spacing:.14em;
+    color:var(--muted); text-transform:uppercase; margin:0 0 5px}
+  input{width:100%; background:#0d1620; border:1px solid var(--line); border-radius:9px;
+    color:var(--ink); font-family:var(--sans); font-size:15px; padding:11px 12px}
+  input:focus{outline:none; border-color:var(--accent)}
+  input::placeholder{color:#4a5f75}
+
+  .gauge{margin-top:16px}
+  .gauge .head{display:flex; justify-content:space-between; align-items:baseline;
+    font-family:var(--mono); font-size:11px; letter-spacing:.1em; color:var(--muted); margin-bottom:7px}
+  .gauge .head b{color:var(--ink); font-weight:600; font-size:12px}
+  .bar{height:22px; border:1px solid var(--line); border-radius:6px; background:#0d1620;
+    display:flex; overflow:hidden}
+  .bar i{display:block; height:100%; transition:width .35s ease}
+  .bar .u{background:repeating-linear-gradient(135deg,#2f6f78 0 5px,#27606a 5px 10px)}
+  .bar .t{background:repeating-linear-gradient(135deg,#6b5330 0 5px,#5c4729 5px 10px)}
+  .legend{display:flex; gap:14px; margin-top:8px; font-family:var(--mono); font-size:10.5px; color:var(--muted)}
+  .legend span{display:inline-flex; align-items:center; gap:5px}
+  .legend i{width:9px; height:9px; border-radius:2px; display:block}
+
+  table.raw{width:100%; border-collapse:collapse; margin-top:12px; font-family:var(--mono); font-size:11.5px}
+  table.raw th{text-align:left; color:var(--muted); font-weight:400; letter-spacing:.1em;
+    padding:6px 8px; border-bottom:1px solid var(--line); font-size:10.5px; text-transform:uppercase}
+  table.raw td{padding:7px 8px; border-bottom:1px solid #1f2c3b; color:var(--ink); vertical-align:top; word-break:break-all}
+  table.raw td.n{color:var(--muted)}
+
+  .hint{margin-top:14px; font-size:12.5px; color:var(--muted); line-height:1.75}
+  .hint b{color:var(--ink); font-weight:600}
+  code{font-family:var(--mono); font-size:11.5px; color:var(--accent);
+    background:#0f1a25; padding:1px 5px; border-radius:4px}
+
+  .banner{border:1px solid var(--warm); background:#241c11; border-radius:12px;
+    padding:14px 15px; font-size:13px; color:#ffd9a8; line-height:1.7; margin-top:16px}
+  .banner b{display:block; color:#ffe9cc; font-size:13.5px; margin-bottom:3px}
+
+  footer{margin-top:34px; padding-top:18px; border-top:1px solid var(--line);
+    font-size:12px; color:var(--muted); text-align:center; line-height:1.7}
+  footer a{color:var(--accent); text-decoration:none}
+</style>
+</head>
+<body>
+  <div class="demobar">サンプルデータ ／ 社内デモ（実現場データではありません）</div>
+
+  <div class="wrap">
+    <header>
+      <p class="eyebrow">取付管ID ／ NFC Tag</p>
+      <h1>取付管番号</h1>
+      <p class="pipeno blank" id="pipeno">—— ——————</p>
+      <div class="src" id="src"><span class="dot"></span><span id="srctext">未取得</span></div>
+    </header>
+
+    <dl class="meta" id="meta"></dl>
+
+    <p class="section-label">詳細情報</p>
+    <a class="card" href="index.html" id="detailLink">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#46c6d6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/></svg></span>
+      <div>
+        <h3>検査報告書・映像・写真集</h3>
+        <p>この取付管の詳細ページを開く</p>
+      </div>
+      <span class="go">→</span>
+    </a>
+
+    <p class="section-label">タグを読み取る</p>
+    <div class="panel">
+      <button class="btn primary" id="scanBtn">読み取りを開始</button>
+      <button class="btn" id="stopBtn" disabled>読み取りを停止</button>
+      <div class="status" id="scanStatus">端末を確認しています…</div>
+      <div id="rawWrap"></div>
+    </div>
+
+    <p class="section-label">タグに書き込む</p>
+    <div class="panel">
+      <div class="fields" id="form"></div>
+
+      <div class="gauge">
+        <div class="head"><span>NTAG216 メモリ使用量</span><b id="bytes">0 / 888 バイト</b></div>
+        <div class="bar"><i class="u" id="barU" style="width:0%"></i><i class="t" id="barT" style="width:0%"></i></div>
+        <div class="legend">
+          <span><i style="background:#2f6f78"></i>URLレコード</span>
+          <span><i style="background:#6b5330"></i>テキストレコード</span>
+        </div>
+      </div>
+
+      <button class="btn primary" id="writeBtn" style="margin-top:16px">タグに書き込む</button>
+      <button class="btn" id="cancelBtn" disabled>書き込みを中止</button>
+      <div class="status" id="writeStatus">入力してから書き込んでください。</div>
+
+      <p class="hint">
+        URLレコードとテキストレコードの<b>2つを同時に</b>書き換えます。
+        書き込み後にタグをかざすと、更新された内容でこのページが開きます。
+      </p>
+    </div>
+
+    <div class="banner" id="offlineTip">
+      <b>機内モードで試してください</b>
+      このページを開いたあと機内モードをONにしても、読み取りと書き込みは動作します。
+      情報がタグ自体に記録されている証拠になります。
+    </div>
+
+    <footer>
+      取付管ライフサイクル情報プラットフォーム ／ NFC操作デモ<br>
+      <a href="index.html">← 詳細ページへ</a>　<a href="../../index.html">現場一覧へ</a>
+    </footer>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+
+  var CAPACITY = 888;                 // NTAG216 ユーザーメモリ
+  var SCHEMA   = 1;
+  var FIELDS = [
+    { key:"id",   label:"取付管番号", ph:"TP-2026-000123", type:"text" },
+    { key:"site", label:"現場名",     ph:"第1工区",         type:"text" },
+    { key:"addr", label:"現場住所",   ph:"A棟前",           type:"text" },
+    { key:"date", label:"点検日",     ph:"",                type:"date" },
+    { key:"by",   label:"点検担当者", ph:"山田",            type:"text" }
+  ];
+
+  var $ = function(id){ return document.getElementById(id); };
+  var enc = new TextEncoder();
+  var dec = new TextDecoder();
+
+  var scanCtl = null, writeCtl = null;
+
+  /* ---------- 表示 ---------- */
+
+  function buildMeta(){
+    var dl = $("meta"); dl.innerHTML = "";
+    FIELDS.slice(1).forEach(function(f){
+      var row = document.createElement("div");
+      row.innerHTML = '<dt>' + f.label + '</dt><dd class="empty" data-k="' + f.key + '"></dd>';
+      dl.appendChild(row);
+    });
+  }
+
+  function buildForm(){
+    var box = $("form"); box.innerHTML = "";
+    FIELDS.forEach(function(f){
+      var w = document.createElement("div");
+      var input = document.createElement("input");
+      input.id = "f_" + f.key;
+      input.type = f.type;
+      if (f.ph) input.placeholder = f.ph;
+      input.addEventListener("input", updateGauge);
+      var lb = document.createElement("label");
+      lb.setAttribute("for", input.id);
+      lb.textContent = f.label;
+      w.appendChild(lb); w.appendChild(input);
+      box.appendChild(w);
+    });
+  }
+
+  function render(state, origin){
+    var no = state.id && state.id.trim();
+    var el = $("pipeno");
+    el.textContent = no || "—— ——————";
+    el.className = "pipeno" + (no ? "" : " blank");
+
+    FIELDS.slice(1).forEach(function(f){
+      var dd = document.querySelector('#meta dd[data-k="' + f.key + '"]');
+      if (!dd) return;
+      var v = state[f.key] && String(state[f.key]).trim();
+      dd.textContent = v || "";
+      dd.className = v ? "" : "empty";
+    });
+
+    var src = $("src");
+    src.className = "src" + (origin === "tag" ? " live" : origin === "url" ? " url" : "");
+    $("srctext").textContent =
+      origin === "tag" ? "タグから直接読み取り" :
+      origin === "url" ? "タグのURLから表示" : "未取得";
+  }
+
+  function fillForm(state){
+    FIELDS.forEach(function(f){
+      var input = $("f_" + f.key);
+      if (input && state[f.key] != null) input.value = state[f.key];
+    });
+    updateGauge();
+  }
+
+  /* ---------- データ組み立て ---------- */
+
+  function collect(){
+    var s = {};
+    FIELDS.forEach(function(f){
+      var input = $("f_" + f.key);
+      var v = input ? input.value.trim() : "";
+      if (v) s[f.key] = v;
+    });
+    return s;
+  }
+
+  function baseUrl(){
+    return location.origin + location.pathname;
+  }
+
+  function buildUrl(state){
+    var p = new URLSearchParams();
+    FIELDS.forEach(function(f){ if (state[f.key]) p.set(f.key, state[f.key]); });
+    var q = p.toString();
+    return baseUrl() + (q ? "?" + q : "");
+  }
+
+  function buildText(state){
+    var o = { v: SCHEMA };
+    FIELDS.forEach(function(f){ if (state[f.key]) o[f.key] = state[f.key]; });
+    return JSON.stringify(o);
+  }
+
+  // NDEF の概算サイズ。URIレコードは "https://" が1バイトに圧縮される。
+  function sizeOf(url, text){
+    var u = url.replace(/^https:\/\/(www\.)?/, "").replace(/^http:\/\//, "");
+    var urlBytes  = enc.encode(u).length + 1 + 6;      // 識別子 + ヘッダ
+    var textBytes = enc.encode(text).length + 3 + 6;   // 言語コード"ja" + ヘッダ
+    return { url: urlBytes, text: textBytes, total: urlBytes + textBytes + 4 };
+  }
+
+  function updateGauge(){
+    var s = collect();
+    var sz = sizeOf(buildUrl(s), buildText(s));
+    $("barU").style.width = Math.min(100, sz.url  / CAPACITY * 100) + "%";
+    $("barT").style.width = Math.min(100, sz.text / CAPACITY * 100) + "%";
+    var b = $("bytes");
+    b.textContent = sz.total + " / " + CAPACITY + " バイト";
+    b.style.color = sz.total > CAPACITY ? "#f3b0aa" : sz.total > CAPACITY * .8 ? "#ffd9a8" : "";
+    return sz;
+  }
+
+  /* ---------- 対応判定 ---------- */
+
+  function support(){
+    if (!("NDEFReader" in window)) {
+      if (/iPhone|iPad|iPod/.test(navigator.userAgent))
+        return { ok:false, msg:"iPhone / iPad のブラウザは NFC の読み書きに対応していません。閲覧のみ利用できます。書き込みは Android 端末の Chrome で行ってください。" };
+      if (!window.isSecureContext)
+        return { ok:false, msg:"HTTPS で開いていないため NFC を利用できません。公開URLから開き直してください。" };
+      return { ok:false, msg:"このブラウザは Web NFC に対応していません。Android 端末の Chrome で開いてください。" };
+    }
+    if (!window.isSecureContext)
+      return { ok:false, msg:"HTTPS で開いていないため NFC を利用できません。公開URLから開き直してください。" };
+    return { ok:true, msg:"" };
+  }
+
+  function say(el, text, cls){
+    var e = $(el);
+    e.textContent = text;
+    e.className = "status" + (cls ? " " + cls : "");
+  }
+
+  function explain(err){
+    var n = err && err.name;
+    if (n === "NotAllowedError")  return "NFC の使用が許可されていません。端末設定で NFC を ON にし、表示される許可ダイアログで「許可」を選んでください。";
+    if (n === "NotSupportedError")return "この端末では NFC を利用できません。";
+    if (n === "NotReadableError") return "タグを読み取れませんでした。NDEF 形式でないか、他のアプリがタグを使用中の可能性があります。";
+    if (n === "NetworkError")     return "タグが離れました。かざしたまま動かさずに、もう一度お試しください。";
+    if (n === "AbortError")       return "中止しました。";
+    if (n === "InvalidStateError")return "すでに別の NFC 操作が実行中です。少し待ってからお試しください。";
+    return "エラーが発生しました：" + (n || "") + " " + (err && err.message ? err.message : "");
+  }
+
+  /* ---------- 読み取り ---------- */
+
+  function decodeRecord(r){
+    try {
+      if (r.recordType === "text") {
+        return new TextDecoder(r.encoding || "utf-8").decode(r.data);
+      }
+      return dec.decode(r.data);
+    } catch(e) { return "(復号できません)"; }
+  }
+
+  function parseMessage(message){
+    var state = null, origin = null, rows = [];
+
+    for (var i = 0; i < message.records.length; i++) {
+      var r = message.records[i];
+      var body = (r.recordType === "empty") ? "" : decodeRecord(r);
+      rows.push({
+        n: i + 1,
+        type: r.recordType + (r.mediaType ? " / " + r.mediaType : "") + (r.lang ? " [" + r.lang + "]" : ""),
+        size: r.data ? r.data.byteLength : 0,
+        body: body
+      });
+
+      if (!state && r.recordType === "text") {
+        try {
+          var o = JSON.parse(body);
+          if (o && typeof o === "object") { state = o; origin = "tag"; }
+        } catch(e) { /* JSON でないテキストは無視 */ }
+      }
+    }
+
+    if (!state) {
+      for (var j = 0; j < message.records.length; j++) {
+        var rec = message.records[j];
+        if (rec.recordType !== "url" && rec.recordType !== "absolute-url") continue;
+        try {
+          var u = new URL(dec.decode(rec.data));
+          if (u.searchParams.toString()) {
+            state = Object.fromEntries(u.searchParams);
+            origin = "tag";
+          }
+        } catch(e) { /* URL でなければ無視 */ }
+        break;
+      }
+    }
+    return { state: state, origin: origin, rows: rows };
+  }
+
+  function showRaw(rows, serial){
+    var html = '<table class="raw"><thead><tr><th>#</th><th>レコード種別</th><th>バイト</th></tr></thead><tbody>';
+    rows.forEach(function(r){
+      html += '<tr><td class="n">' + r.n + '</td><td>' + esc(r.type) +
+              '<br><span style="color:#8ea3b8">' + esc(clip(r.body, 90)) + '</span></td>' +
+              '<td class="n">' + r.size + '</td></tr>';
+    });
+    html += '</tbody></table>';
+    if (serial) {
+      html += '<p class="hint" style="margin-top:10px"><b>タグUID</b> <code>' + esc(serial) +
+              '</code><br>製造時に書き込まれた固有番号です。書き換えも複製もできません。</p>';
+    }
+    $("rawWrap").innerHTML = html;
+  }
+
+  function esc(s){
+    return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){
+      return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c];
+    });
+  }
+  function clip(s, n){ s = String(s || ""); return s.length > n ? s.slice(0, n) + "…" : s; }
+
+  function startScan(){
+    var sp = support();
+    if (!sp.ok) { say("scanStatus", sp.msg, "err"); return; }
+
+    stopScan();
+    scanCtl = new AbortController();
+    var ndef = new NDEFReader();
+
+    ndef.onreading = function(ev){
+      var res = parseMessage(ev.message);
+      showRaw(res.rows, ev.serialNumber);
+      if (res.state) {
+        render(res.state, "tag");
+        fillForm(res.state);
+        say("scanStatus", "読み取りました。レコード " + res.rows.length + " 件、UID " + (ev.serialNumber || "不明"), "ok");
+      } else {
+        say("scanStatus", "読み取りましたが、取付管の情報が入っていません。下の欄を埋めて書き込んでください。", "busy");
+      }
+    };
+    ndef.onreadingerror = function(){
+      say("scanStatus", "タグを読み取れませんでした。かざす位置を変えてもう一度お試しください。", "err");
+    };
+
+    ndef.scan({ signal: scanCtl.signal }).then(function(){
+      say("scanStatus", "タグをかざしてください…", "busy");
+      $("scanBtn").disabled = true;
+      $("scanBtn").textContent = "読み取り中";
+      $("stopBtn").disabled = false;
+    }).catch(function(err){
+      say("scanStatus", explain(err), "err");
+      stopScan();
+    });
+  }
+
+  function stopScan(){
+    if (scanCtl) { scanCtl.abort(); scanCtl = null; }
+    $("scanBtn").disabled = false;
+    $("scanBtn").textContent = "読み取りを開始";
+    $("stopBtn").disabled = true;
+  }
+
+  /* ---------- 書き込み ---------- */
+
+  function writeTag(){
+    var sp = support();
+    if (!sp.ok) { say("writeStatus", sp.msg, "err"); return; }
+
+    var state = collect();
+    if (!state.id) { say("writeStatus", "取付管番号を入力してください。", "err"); return; }
+
+    var sz = updateGauge();
+    if (sz.total > CAPACITY) {
+      say("writeStatus", "データが " + sz.total + " バイトで、タグの容量 " + CAPACITY + " バイトを超えています。現場名や住所を短くしてください。", "err");
+      return;
+    }
+
+    var url  = buildUrl(state);
+    var text = buildText(state);
+
+    var wasScanning = !!scanCtl;
+    stopScan();
+
+    writeCtl = new AbortController();
+    var ndef = new NDEFReader();
+
+    $("writeBtn").disabled = true;
+    $("writeBtn").classList.add("armed");
+    $("writeBtn").textContent = "タグをかざしてください";
+    $("cancelBtn").disabled = false;
+    say("writeStatus", "タグをかざしたまま動かさないでください…", "busy");
+
+    ndef.write({
+      records: [
+        { recordType: "url",  data: url },
+        { recordType: "text", data: text, lang: "ja" }
+      ]
+    }, { overwrite: true, signal: writeCtl.signal }).then(function(){
+      say("writeStatus", "書き込みました（" + sz.total + " バイト）。もう一度かざすと、更新された内容が表示されます。", "ok");
+      render(state, "url");
+      startScan();
+      say("scanStatus", "確認のため、もう一度タグをかざしてください…", "busy");
+    }).catch(function(err){
+      say("writeStatus", explain(err), "err");
+      if (wasScanning) startScan();
+    }).then(function(){
+      writeCtl = null;
+      $("writeBtn").disabled = false;
+      $("writeBtn").classList.remove("armed");
+      $("writeBtn").textContent = "タグに書き込む";
+      $("cancelBtn").disabled = true;
+    });
+  }
+
+  /* ---------- 起動 ---------- */
+
+  buildMeta();
+  buildForm();
+
+  var q = Object.fromEntries(new URLSearchParams(location.search));
+  var hasQuery = FIELDS.some(function(f){ return q[f.key]; });
+
+  if (hasQuery) {
+    render(q, "url");
+    fillForm(q);
+  } else {
+    render({}, null);
+    updateGauge();
+  }
+
+  // 詳細ページへのリンクにも取付管番号を引き継ぐ
+  var link = $("detailLink");
+  if (q.id) link.href = "index.html?id=" + encodeURIComponent(q.id);
+
+  $("scanBtn").addEventListener("click", startScan);
+  $("stopBtn").addEventListener("click", function(){
+    stopScan();
+    say("scanStatus", "読み取りを停止しました。", "");
+  });
+  $("writeBtn").addEventListener("click", writeTag);
+  $("cancelBtn").addEventListener("click", function(){
+    if (writeCtl) writeCtl.abort();
+  });
+
+  var sp = support();
+  if (sp.ok) {
+    say("scanStatus", "「読み取りを開始」を押してからタグをかざしてください。", "");
+  } else {
+    say("scanStatus", sp.msg, "err");
+    say("writeStatus", sp.msg, "err");
+    $("scanBtn").disabled = true;
+    $("writeBtn").disabled = true;
+    $("offlineTip").style.display = "none";
+  }
+})();
+</script>
+</body>
+</html>

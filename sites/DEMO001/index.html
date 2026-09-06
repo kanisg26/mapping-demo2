@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>取付管検査情報 ｜ DEMO001（サンプル）</title>
+<style>
+  :root{
+    --bg:#0e1620; --panel:#16212e; --panel2:#1c2a3a;
+    --ink:#eef3f8; --muted:#8ea3b8; --line:#2a3a4d;
+    --accent:#46c6d6; --warm:#f0a24b; --demo:#e2574c;
+    --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace;
+    --sans:system-ui,-apple-system,"Segoe UI","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:
+      radial-gradient(1200px 500px at 50% -10%, #17273a 0%, transparent 60%),
+      var(--bg);
+    color:var(--ink); font-family:var(--sans);
+    -webkit-font-smoothing:antialiased; line-height:1.55;
+    padding-bottom:48px;
+  }
+  .wrap{max-width:540px; margin:0 auto; padding:0 18px}
+
+  .demobar{
+    position:sticky; top:0; z-index:10;
+    background:var(--demo); color:#fff;
+    font-size:12.5px; letter-spacing:.06em; font-weight:600;
+    text-align:center; padding:7px 10px;
+    font-family:var(--mono);
+  }
+
+  header{padding:26px 0 8px; text-align:center}
+  .emblem{width:76px; height:76px; margin:0 auto 14px; display:block}
+  .eyebrow{
+    font-family:var(--mono); font-size:11.5px; letter-spacing:.22em;
+    color:var(--accent); text-transform:uppercase; margin:0 0 8px;
+  }
+  h1{
+    font-size:15px; font-weight:600; color:var(--muted);
+    margin:0 0 4px; letter-spacing:.02em;
+  }
+  .pipeno{
+    font-family:var(--mono); font-size:26px; letter-spacing:.14em;
+    color:var(--ink); margin:2px 0 0; font-weight:600;
+  }
+  .pipeno .blank{color:var(--line)}
+
+  .meta{
+    margin:20px 0 4px; border:1px solid var(--line); border-radius:12px;
+    overflow:hidden; background:linear-gradient(180deg,var(--panel),#131e2a);
+  }
+  .meta div{
+    display:grid; grid-template-columns:104px 1fr; gap:0;
+    border-bottom:1px solid var(--line);
+  }
+  .meta div:last-child{border-bottom:0}
+  .meta dt{
+    font-size:12.5px; color:var(--muted); padding:11px 14px;
+    background:#111b26; margin:0; border-right:1px solid var(--line);
+    font-family:var(--mono); letter-spacing:.04em;
+  }
+  .meta dd{
+    margin:0; padding:11px 14px; font-size:14px; color:var(--ink);
+    min-height:20px;
+  }
+  .meta dd.empty::after{content:"—"; color:var(--line)}
+
+  .section-label{
+    font-family:var(--mono); font-size:11px; letter-spacing:.2em;
+    color:var(--muted); text-transform:uppercase;
+    margin:28px 2px 12px; display:flex; align-items:center; gap:10px;
+  }
+  .section-label::after{content:""; flex:1; height:1px; background:var(--line)}
+
+  .cards{display:flex; flex-direction:column; gap:12px}
+  .card{
+    display:flex; align-items:center; gap:15px; text-decoration:none;
+    background:linear-gradient(180deg,var(--panel2),var(--panel));
+    border:1px solid var(--line); border-radius:14px; padding:16px 16px;
+    color:var(--ink); position:relative; overflow:hidden;
+    transition:transform .15s ease, border-color .15s ease, background .15s ease;
+  }
+  .card:active{transform:scale(.985)}
+  @media(hover:hover){.card:hover{border-color:var(--accent); background:linear-gradient(180deg,#20303f,#18242f)}}
+  .card .ic{
+    width:46px; height:46px; flex:0 0 46px; border-radius:11px;
+    display:grid; place-items:center;
+    background:#0f1a25; border:1px solid var(--line);
+  }
+  .card .ic svg{width:24px; height:24px}
+  .card h3{margin:0 0 2px; font-size:16px; font-weight:600}
+  .card p{margin:0; font-size:12.5px; color:var(--muted)}
+  .card .go{
+    margin-left:auto; color:var(--accent); font-size:20px; font-family:var(--mono);
+    opacity:.8;
+  }
+  .card .sub{
+    display:inline-block; margin-top:5px; font-family:var(--mono);
+    font-size:11px; color:var(--muted);
+  }
+  .card .sub a{color:var(--accent); text-decoration:none}
+  /* video group: one section with two play choices */
+  .vgroup{display:flex; align-items:flex-start; gap:15px;
+    background:linear-gradient(180deg,var(--panel2),var(--panel));
+    border:1px solid var(--line); border-radius:14px; padding:16px}
+  .vgroup>.ic{width:46px; height:46px; flex:0 0 46px; border-radius:11px;
+    display:grid; place-items:center; background:#0f1a25; border:1px solid var(--line)}
+  .vgroup>.ic svg{width:24px; height:24px}
+  .vgroup .grp{flex:1; min-width:0}
+  .vgroup h3{margin:0 0 10px; font-size:16px; font-weight:600}
+  .vbtns{display:flex; gap:10px; flex-wrap:wrap}
+  .vbtn{flex:1 1 130px; text-decoration:none; color:var(--ink);
+    background:#0f1a25; border:1px solid var(--line); border-radius:10px;
+    padding:11px 12px; display:flex; flex-direction:column; gap:3px;
+    transition:border-color .15s ease, background .15s ease}
+  .vbtn:active{transform:scale(.98)}
+  @media(hover:hover){.vbtn:hover{border-color:var(--accent); background:#12202c}}
+  .vbtn .vt{font-size:14px; font-weight:600; display:flex; align-items:center; gap:6px}
+  .vbtn .vt::before{content:"▶"; color:var(--accent); font-size:10px}
+  .vbtn .vm{font-family:var(--mono); font-size:11px; color:var(--muted); letter-spacing:.03em}
+  .card h3 .ext{font-family:var(--mono); font-size:10.5px; letter-spacing:.05em;
+    color:var(--accent); background:#0f1a25; border:1px solid var(--line); border-radius:5px;
+    padding:1px 6px; margin-left:7px; vertical-align:2px; font-weight:500}
+
+  .qr{
+    margin-top:30px; border:1px dashed var(--line); border-radius:14px;
+    padding:20px 18px; text-align:center; background:#111b26;
+  }
+  .qr h3{margin:0 0 4px; font-size:14px; color:var(--ink)}
+  .qr p{margin:0 0 16px; font-size:12px; color:var(--muted)}
+  #qrbox{width:168px; height:168px; margin:0 auto; padding:12px;
+    background:#fff; border-radius:10px; display:grid; place-items:center}
+  #qrbox img,#qrbox canvas{display:block}
+  .qr .url{
+    margin-top:12px; font-family:var(--mono); font-size:11px; color:var(--muted);
+    word-break:break-all;
+  }
+
+  footer{
+    margin-top:34px; padding-top:18px; border-top:1px solid var(--line);
+    font-size:12px; color:var(--muted); text-align:center; line-height:1.7;
+  }
+  footer a{color:var(--accent); text-decoration:none}
+
+  @media (prefers-reduced-motion:no-preference){
+    .card,.meta,.qr{animation:rise .5s ease both}
+    .card:nth-child(2){animation-delay:.06s}
+    .card:nth-child(3){animation-delay:.12s}
+    @keyframes rise{from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:none}}
+  }
+</style>
+</head>
+<body>
+  <div class="demobar">サンプルデータ ／ 展示・社内イメージ共有デモ（実現場データではありません）</div>
+
+  <div class="wrap">
+    <header>
+      <svg class="emblem" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r="46" fill="none" stroke="#2a3a4d" stroke-width="2"/>
+        <circle cx="50" cy="50" r="37" fill="none" stroke="#46c6d6" stroke-width="1.5" opacity=".8"/>
+        <circle cx="50" cy="50" r="7" fill="#46c6d6" opacity=".9"/>
+        <g stroke="#8ea3b8" stroke-width="1.4">
+          <line x1="50" y1="13" x2="50" y2="24"/><line x1="50" y1="76" x2="50" y2="87"/>
+          <line x1="13" y1="50" x2="24" y2="50"/><line x1="76" y1="50" x2="87" y2="50"/>
+          <line x1="24" y1="24" x2="31" y2="31"/><line x1="69" y1="69" x2="76" y2="76"/>
+          <line x1="76" y1="24" x2="69" y2="31"/><line x1="31" y1="69" x2="24" y2="76"/>
+        </g>
+      </svg>
+      <p class="eyebrow">取付管検査 ／ Mapping Camera</p>
+      <h1>取付管番号</h1>
+      <p class="pipeno"><span class="blank">—— ——————</span></p>
+    </header>
+
+    <dl class="meta">
+      <div><dt>現場名</dt><dd class="empty"></dd></div>
+      <div><dt>現場住所</dt><dd class="empty"></dd></div>
+      <div><dt>点検日</dt><dd class="empty"></dd></div>
+      <div><dt>点検担当者</dt><dd class="empty"></dd></div>
+    </dl>
+
+    <p class="section-label">コンテンツを選択</p>
+    <div class="cards">
+      <a class="card" href="report.pdf">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#46c6d6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/></svg></span>
+        <div>
+          <h3>検査報告書</h3>
+          <p>マッピング解析結果・土工量・改築部材（PDF）</p>
+        </div>
+        <span class="go">→</span>
+      </a>
+
+      <div class="vgroup">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#46c6d6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="#46c6d6" stroke="none"/></svg></span>
+        <div class="grp">
+          <h3>検査映像</h3>
+          <div class="vbtns">
+            <a class="vbtn" href="video.mp4">
+              <span class="vt">軽量版</span>
+              <span class="vm">管内イメージ</span>
+            </a>
+            <a class="vbtn" href="video_demo.mp4">
+              <span class="vt">デモ配管版</span>
+              <span class="vm">展示配管を再現 </span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <a class="card" href="https://kanisg26.github.io/AR-hyouji-26-test4/" target="_blank" rel="noopener">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#46c6d6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5l8 4.5v10l-8 4.5-8-4.5v-10z"/><path d="M12 12l8-4.5M12 12v9.5M12 12L4 7.5"/></svg></span>
+        <div>
+          <h3>AR表示システム <span class="ext">↗ 外部</span></h3>
+          <p>下水道取付管を3D・ARで確認（Webブラウザ）</p>
+        </div>
+        <span class="go">→</span>
+      </a>
+
+      <a class="card" href="photos.html">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#46c6d6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="M21 15l-5-5L5 21"/></svg></span>
+        <div>
+          <h3>コメント写真集</h3>
+          <p>特記事項ごとの記録（写真欄）</p>
+          <span class="sub">Excel様式：<a href="photos.xlsx">photos.xlsx</a></span>
+        </div>
+        <span class="go">→</span>
+      </a>
+    </div>
+
+    <div class="qr">
+      <h3>この現場のQRコード</h3>
+      <p>蓋の裏に貼る用。GitHub Pages 公開後にこの画面を開くと、正しいURLのQRが表示されます。</p>
+      <div id="qrbox"></div>
+      <div class="url" id="qrurl"></div>
+    </div>
+
+    <footer>
+      取付管用マッピングカメラシステム 解析ツール ／ QR閲覧デモ<br>
+      <a href="../../index.html">← 現場一覧へ戻る</a>
+    </footer>
+  </div>
+
+  <script src="../../vendor/qrcode.min.js"></script>
+  <script>
+    (function(){
+      var url = window.location.href;
+      // 現場一覧トップから ?url= で確認する場合にも対応
+      document.getElementById('qrurl').textContent = url;
+      try{
+        new QRCode(document.getElementById('qrbox'), {
+          text: url, width:144, height:144,
+          colorDark:"#0e1620", colorLight:"#ffffff",
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      }catch(e){
+        document.getElementById('qrbox').textContent = 'QR生成不可';
+      }
+    })();
+  </script>
+</body>
+</html>
