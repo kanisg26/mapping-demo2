@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#F1F2EE">
+<title>取付管 現地確認票 ｜ DEMO001（見本）</title>
+<style>
+  :root{
+    --paper:#F1F2EE;      /* 再生紙 */
+    --white:#FFFFFF;      /* 記入欄 */
+    --tint:#E5E8E1;       /* 項目名の地色 */
+    --ink:#1C221F;
+    --ink2:#5C655F;
+    --rule:#B9C0B7;       /* 主罫 */
+    --rule2:#DBDFD7;      /* 副罫 */
+    --green:#1F5B41;      /* 下水道の埋設標示色 */
+    --green2:#E7EFE9;
+    --seal:#B0392A;       /* 朱 */
+    --amber:#8A6410;
+    --mincho:"Hiragino Mincho ProN","Yu Mincho",YuMincho,"Noto Serif JP","Times New Roman",serif;
+    --gothic:"Hiragino Kaku Gothic ProN","Yu Gothic",YuGothic,"Noto Sans JP",system-ui,sans-serif;
+    --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--paper); color:var(--ink); font-family:var(--gothic);
+    line-height:1.62; -webkit-font-smoothing:antialiased; padding-bottom:64px;
+    font-size:15px;
+  }
+  .sheet{max-width:560px; margin:0 auto; padding:0 16px}
+
+  /* ── 帳票ヘッダ ── */
+  .head{display:flex; align-items:flex-start; gap:14px; padding:22px 0 14px;
+    border-bottom:2px solid var(--ink)}
+  .head .t{flex:1; min-width:0}
+  .kind{font-family:var(--mono); font-size:10.5px; letter-spacing:.24em;
+    color:var(--green); margin:0 0 5px}
+  .head h1{font-family:var(--mincho); font-size:22px; font-weight:600;
+    margin:0; letter-spacing:.06em}
+  .head .sub{margin:5px 0 0; font-size:12px; color:var(--ink2)}
+  .seal{flex:0 0 62px; width:62px; height:62px; border:2.5px solid var(--seal);
+    border-radius:5px; color:var(--seal); display:grid; place-items:center;
+    font-family:var(--mincho); font-size:19px; font-weight:600; line-height:1.1;
+    letter-spacing:.06em; transform:rotate(-7deg); opacity:.88; text-align:center}
+
+  /* ── 表示モード切替 ── */
+  .mode{display:flex; border:1px solid var(--rule); background:var(--white); margin-top:14px}
+  .mode button{flex:1; border:0; background:transparent; color:var(--ink2);
+    font-family:var(--gothic); font-size:13px; font-weight:600; padding:11px 6px;
+    cursor:pointer; letter-spacing:.04em}
+  .mode button + button{border-left:1px solid var(--rule2)}
+  .mode button[aria-pressed="true"]{background:var(--green); color:#fff}
+  .mode button:focus-visible{outline:2px solid var(--green); outline-offset:-3px}
+  .mode-note{font-size:11.5px; color:var(--ink2); margin:6px 2px 0; letter-spacing:.02em}
+
+  /* ── 不変マーク／権限 ── */
+  .tagmark{display:inline-block; font-family:var(--mono); font-size:9.5px;
+    letter-spacing:.1em; color:var(--seal); border:1px solid var(--seal);
+    padding:1px 5px; margin-left:7px; vertical-align:2px}
+  .role{display:grid; grid-template-columns:repeat(2,1fr); border:1px solid var(--rule);
+    background:var(--white)}
+  .role button{border:0; background:transparent; color:var(--ink2);
+    font-family:var(--gothic); font-size:12.5px; font-weight:600; padding:11px 4px;
+    cursor:pointer; border-top:1px solid var(--rule2); border-left:1px solid var(--rule2)}
+  .role button:nth-child(-n+2){border-top:0}
+  .role button:nth-child(odd){border-left:0}
+  .role button[aria-pressed="true"]{background:var(--green); color:#fff}
+  .role button:focus-visible{outline:2px solid var(--green); outline-offset:-3px}
+  .gate{border:1px solid var(--rule); border-top:0; background:var(--white); padding:13px 14px}
+  .gate .lead{font-size:12.5px; color:var(--ink2); margin:0 0 12px; line-height:1.7}
+  .tally{display:flex; align-items:baseline; justify-content:space-between;
+    font-size:11.5px; color:var(--ink2); letter-spacing:.04em; margin-bottom:6px}
+  .tally b{font-family:var(--mono); font-size:14px; color:var(--green)}
+  .tbar{height:6px; border:1px solid var(--rule2); background:var(--paper); margin-bottom:6px}
+  .tbar i{display:block; height:100%; background:var(--green); transition:width .3s ease}
+  .item{display:flex; gap:11px; align-items:flex-start; padding:12px 0;
+    border-top:1px solid var(--rule2); text-decoration:none; color:inherit}
+  .item .k{flex:0 0 18px; width:18px; margin-top:2px}
+  .item .b{flex:1; min-width:0}
+  .item .t{font-size:14.5px; font-weight:600; letter-spacing:.02em}
+  .item .d{font-size:12px; color:var(--ink2); line-height:1.6; margin-top:2px}
+  .item .gos{flex:0 0 auto; align-self:center; display:flex; flex-direction:column; gap:5px}
+  a.go{text-decoration:none; display:block; text-align:center}
+  @media(hover:hover){a.go:hover{background:#D6E6DC}}
+  .item .go{flex:0 0 auto; align-self:center; font-family:var(--mono); font-size:11px;
+    color:var(--green); border:1px solid #A8C4B4; background:var(--green2); padding:4px 8px}
+  .item.off{opacity:.4}
+  .item.off .go{color:var(--ink2); border-color:var(--rule2); background:var(--tint)}
+  @media(hover:hover){a.item:hover .t{text-decoration:underline}}
+  .sim{margin-top:12px; padding:9px 11px; border:1px dashed var(--seal);
+    color:#8C2E22; font-size:11.5px; line-height:1.6}
+
+  /* ── 台帳カード ── */
+  .rec{border:1px solid var(--rule); background:var(--white); margin-top:20px}
+  .rec > .cap{font-family:var(--mono); font-size:10.5px; letter-spacing:.2em;
+    color:var(--ink2); background:var(--tint); padding:7px 12px;
+    border-bottom:1px solid var(--rule)}
+
+  .no{padding:16px 14px 14px; border-bottom:1px solid var(--rule)}
+  .no .lbl{font-size:11.5px; color:var(--ink2); letter-spacing:.1em; margin-bottom:6px}
+  .no .val{font-family:var(--mincho); font-size:27px; font-weight:600;
+    letter-spacing:.1em; word-break:break-all; line-height:1.3}
+  .no .val.blank{color:var(--rule)}
+  .origin{display:inline-flex; align-items:center; gap:7px; margin-top:10px;
+    font-family:var(--mono); font-size:10.5px; letter-spacing:.08em;
+    color:var(--ink2); border:1px solid var(--rule2); padding:4px 9px; border-radius:3px}
+  .origin i{width:7px; height:7px; border-radius:50%; background:var(--rule); display:block}
+  .origin.tag{color:var(--green); border-color:#A8C4B4; background:var(--green2)}
+  .origin.tag i{background:var(--green)}
+  .origin.url{color:var(--amber); border-color:#D9C89A; background:#FAF4E4}
+  .origin.url i{background:var(--amber)}
+
+  dl.rows{margin:0}
+  dl.rows > div{display:grid; grid-template-columns:96px 1fr; border-bottom:1px solid var(--rule2)}
+  dl.rows > div:last-child{border-bottom:0}
+  dl.rows dt{margin:0; padding:11px 12px; font-size:12.5px; color:var(--ink2);
+    background:var(--tint); border-right:1px solid var(--rule2); letter-spacing:.06em}
+  dl.rows dd{margin:0; padding:11px 12px; font-size:15px; min-height:22px; word-break:break-all}
+  dl.rows dd.empty::after{content:"—"; color:var(--rule)}
+
+  /* ── 見出し ── */
+  h2{font-family:var(--mincho); font-size:16px; font-weight:600; letter-spacing:.08em;
+    margin:32px 0 12px; padding-bottom:7px; border-bottom:1px solid var(--rule);
+    display:flex; align-items:baseline; gap:10px}
+  h2 small{font-family:var(--mono); font-size:10px; letter-spacing:.18em;
+    color:var(--ink2); font-weight:400}
+
+  /* ── 位置 ── */
+  .geo{border:1px solid var(--rule); background:var(--white); padding:14px}
+  .plan{width:100%; height:auto; display:block; background:#FBFBF9;
+    border:1px solid var(--rule2)}
+  .coord{display:grid; grid-template-columns:1fr 1fr; gap:1px; margin-top:12px;
+    background:var(--rule2); border:1px solid var(--rule2)}
+  .coord div{background:var(--white); padding:9px 11px}
+  .coord span{display:block; font-size:10.5px; color:var(--ink2); letter-spacing:.1em; margin-bottom:2px}
+  .coord b{font-family:var(--mono); font-size:14px; font-weight:600; letter-spacing:.01em}
+  .coord .wide{grid-column:1 / -1}
+  .maplink{display:block; margin-top:10px; text-align:center; font-size:13px;
+    color:var(--green); text-decoration:none; border:1px solid #A8C4B4;
+    background:var(--green2); padding:10px; font-weight:600}
+  .maplink[hidden]{display:none}
+
+  /* ── 操作 ── */
+  .box{border:1px solid var(--rule); background:var(--white); padding:14px}
+  .box + .box{margin-top:10px}
+
+  .btn{display:block; width:100%; border:1px solid var(--rule); background:var(--paper);
+    color:var(--ink); font-family:var(--gothic); font-size:15px; font-weight:600;
+    padding:13px; cursor:pointer; border-radius:2px}
+  .btn:focus-visible{outline:2px solid var(--green); outline-offset:2px}
+  @media(hover:hover){.btn:hover:not(:disabled){background:var(--tint)}}
+  .btn:disabled{opacity:.42; cursor:not-allowed}
+  .btn.main{background:var(--green); border-color:var(--green); color:#fff}
+  @media(hover:hover){.btn.main:hover:not(:disabled){background:#17452F}}
+  .btn.armed{background:#8A6410; border-color:#8A6410; color:#fff}
+  .btn + .btn{margin-top:8px}
+
+  .msg{margin-top:11px; font-size:13px; line-height:1.7; color:var(--ink2);
+    border-left:3px solid var(--rule); padding:1px 0 1px 11px; word-break:break-word}
+  .msg.ok{color:#17452F; border-color:var(--green)}
+  .msg.err{color:#8C2E22; border-color:var(--seal)}
+  .msg.busy{color:#6E5210; border-color:var(--amber)}
+
+  /* ── 入力 ── */
+  .fields{display:grid; gap:11px}
+  label{display:block; font-size:11.5px; color:var(--ink2); letter-spacing:.08em; margin-bottom:4px}
+  input{width:100%; background:var(--white); border:1px solid var(--rule);
+    border-radius:2px; color:var(--ink); font-family:var(--gothic); font-size:16px;
+    padding:11px 12px}
+  input:focus{outline:none; border-color:var(--green); box-shadow:inset 0 0 0 1px var(--green)}
+  input::placeholder{color:#A9B0A8}
+
+  /* ── 容量計 ── */
+  .cap-meter{margin-top:16px}
+  .cap-meter .h{display:flex; justify-content:space-between; align-items:baseline;
+    font-size:11.5px; color:var(--ink2); letter-spacing:.06em; margin-bottom:6px}
+  .cap-meter .h b{font-family:var(--mono); font-size:12.5px; color:var(--ink)}
+  .bar{height:16px; border:1px solid var(--rule); background:var(--paper); display:flex; overflow:hidden}
+  .bar i{display:block; height:100%; transition:width .3s ease}
+  .bar .u{background:var(--green)}
+  .bar .t{background:#7E9A5C}
+  .key{display:flex; gap:14px; margin-top:7px; font-size:10.5px; color:var(--ink2)}
+  .key span{display:inline-flex; align-items:center; gap:5px}
+  .key i{width:9px; height:9px; display:block}
+
+  /* ── レコード一覧 ── */
+  table.raw{width:100%; border-collapse:collapse; margin-top:12px; font-size:12px}
+  table.raw th{text-align:left; font-family:var(--mono); font-size:10px; letter-spacing:.14em;
+    color:var(--ink2); font-weight:400; padding:6px 8px; background:var(--tint);
+    border:1px solid var(--rule2)}
+  table.raw td{padding:8px; border:1px solid var(--rule2); vertical-align:top; word-break:break-all}
+  table.raw td.n{font-family:var(--mono); color:var(--ink2); text-align:center; width:26px}
+  table.raw td.b{font-family:var(--mono); color:var(--ink2); text-align:right; width:52px}
+  table.raw .ty{font-family:var(--mono); font-size:11.5px; color:var(--green)}
+  table.raw .bd{color:var(--ink2); font-size:11.5px; margin-top:3px}
+  .uid{margin-top:10px; font-size:12.5px; color:var(--ink2); line-height:1.7}
+  .uid b{color:var(--ink)}
+
+  .note{margin-top:14px; font-size:12.5px; color:var(--ink2); line-height:1.75}
+  .note b{color:var(--ink)}
+  code{font-family:var(--mono); font-size:12px; background:var(--tint);
+    padding:1px 5px; border:1px solid var(--rule2)}
+
+  .callout{border:1px solid var(--rule); border-left:4px solid var(--green);
+    background:var(--white); padding:13px 14px; font-size:13px; line-height:1.75; margin-top:18px}
+  .callout b{display:block; margin-bottom:3px}
+
+  footer{margin-top:32px; padding-top:16px; border-top:1px solid var(--rule);
+    font-size:12px; color:var(--ink2); text-align:center; line-height:1.9}
+  footer a{color:var(--green)}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <div class="head">
+    <div class="t">
+      <p class="kind">SEWER LATERAL / FIELD RECORD</p>
+      <h1>取付管 現地確認票</h1>
+      <p class="sub">サンプルデータ。実現場の記録ではありません。</p>
+    </div>
+    <div class="seal">見本</div>
+  </div>
+
+  <div class="mode" role="group" aria-label="表示モード">
+    <button type="button" id="modeOff" aria-pressed="false">位置情報なし</button>
+    <button type="button" id="modeOn"  aria-pressed="false">位置情報あり</button>
+  </div>
+  <p class="mode-note" id="modeNote"></p>
+
+  <div class="rec">
+    <div class="cap">台帳記載事項</div>
+    <div class="no">
+      <div class="lbl">取付管ID<span class="tagmark">タグ記録・不変</span></div>
+      <div class="val blank" id="pid">未取得</div>
+      <div class="origin" id="origin"><i></i><span id="originText">情報源なし</span></div>
+    </div>
+    <dl class="rows" id="rows"></dl>
+  </div>
+
+  <div id="geoBlock">
+  <h2>位置 <small>GPS</small></h2>
+  <div class="geo">
+    <svg class="plan" id="plan" viewBox="0 0 300 150" role="img" aria-label="推定位置と誤差範囲"></svg>
+    <div class="coord">
+      <div><span>緯度</span><b id="cLat">—</b></div>
+      <div><span>経度</span><b id="cLng">—</b></div>
+      <div class="wide"><span>誤差半径（参考値）</span><b id="cAcc">—</b></div>
+    </div>
+    <a class="maplink" id="mapLink" href="#" target="_blank" rel="noopener" hidden>地図で開く（通信が必要）</a>
+  </div>
+  </div>
+
+  <h2>閲覧できる情報 <small>ACCESS</small></h2>
+  <div class="role" id="roleBtns"></div>
+  <div class="gate">
+    <p class="lead" id="roleLead"></p>
+    <div class="tally"><span>閲覧できる項目</span><span><b id="tallyN">0</b> / <span id="tallyT">0</span></span></div>
+    <div class="tbar"><i id="tallyBar" style="width:0%"></i></div>
+    <div id="roleItems"></div>
+    <p class="sim">デモ用の疑似切替です。実装時はここに認証が入り、施錠された項目はクラウド側で遮断されます。</p>
+  </div>
+
+  <h2>タグを読み取る <small>READ</small></h2>
+  <div class="box">
+    <button class="btn main" id="scanBtn">読み取りを開始</button>
+    <button class="btn" id="stopBtn" disabled>読み取りを停止</button>
+    <div class="msg" id="scanMsg">端末を確認しています…</div>
+    <div id="rawWrap"></div>
+  </div>
+
+  <div id="measBlock">
+  <h2>現在地を測る <small>GEOLOCATION</small></h2>
+  <div class="box">
+    <button class="btn" id="geoBtn">現在地を取得（30秒）</button>
+    <button class="btn" id="geoStop" disabled>この値で確定</button>
+    <div class="msg" id="geoMsg">屋外で静止したまま押してください。時間が経つほど誤差が縮みます。</div>
+    <p class="note">
+      屋内では誤差が数十メートルから縮まないことがあります。その場合は下の
+      <b>緯度・経度を直接入力</b>してください（地図アプリで現地を長押しすると座標が出ます）。<br>
+      端末を8の字に振るのは<b>方位センサーの校正</b>で、位置の精度には影響しません。
+      効くのは「静止して待つ」「空が開けた場所に立つ」「通信をONにする」の3つです。
+    </p>
+  </div>
+  </div>
+
+  <h2>タグに書き込む <small>WRITE</small></h2>
+  <div class="box">
+    <div class="fields" id="pidForm"></div>
+    <p class="note" style="margin:8px 0 14px">
+      取付管IDは<b>販売時に1回だけ登録</b>する不変情報です。本番ではNTAG216のパスワード保護（AUTH0）で書き込みを封じます。
+    </p>
+    <div class="fields" id="form"></div>
+    <div class="fields" id="geoForm" style="margin-top:11px"></div>
+
+    <div class="cap-meter">
+      <div class="h"><span>NTAG216 メモリ使用量</span><b id="bytes">0 / 888 バイト</b></div>
+      <div class="bar"><i class="u" id="barU" style="width:0%"></i><i class="t" id="barT" style="width:0%"></i></div>
+      <div class="key">
+        <span><i style="background:#1F5B41"></i>URLレコード</span>
+        <span><i style="background:#7E9A5C"></i>テキストレコード</span>
+      </div>
+    </div>
+
+    <button class="btn main" id="writeBtn" style="margin-top:16px">タグに書き込む</button>
+    <button class="btn" id="cancelBtn" disabled>書き込みを中止</button>
+    <div class="msg" id="writeMsg">入力してから書き込んでください。</div>
+    <p class="note">
+      URLレコードとテキストレコードを<b>1回の操作で同時に</b>書き換えます。
+      内容がずれることはありません。
+    </p>
+  </div>
+
+  <div class="callout" id="offlineTip">
+    <b>機内モードで試してください</b>
+    このページを開いたあとに機内モードをONにしても、読み取り・書き込み・座標の表示は動作します。
+    情報がタグ自体に記録されている証拠になります（地図の表示だけは通信が必要です）。
+  </div>
+
+  <footer>
+    取付管ライフサイクル情報プラットフォーム ／ NFC操作デモ<br>
+    <a href="index.html">詳細ページへ</a>　<a href="../../index.html">現場一覧へ</a>
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var CAPACITY = 888;   // NTAG216 ユーザーメモリ
+  var SCHEMA   = 1;
+  var GEO_MS   = 30000; // 測位を続ける時間
+
+  var PID = { key:"pid", label:"取付管ID", ph:"23222-0006-000001", type:"text" };
+  var FIELDS = [
+    { key:"no",   label:"取付管番号",   ph:"TP-2026-000123", type:"text" },
+    { key:"site", label:"現場名",       ph:"第1工区",         type:"text" },
+    { key:"addr", label:"現場住所",     ph:"A棟前",           type:"text" },
+    { key:"date", label:"最終点検日",   ph:"",                type:"date" },
+    { key:"org",  label:"最終点検業者", ph:"○○管路工業",     type:"text" }
+  ];
+
+  var ROLES = [
+    { key:"public", label:"誰でも",
+      lead:"タグをかざした全員が見られる範囲です。現物の同定と、最終点検がいつ誰によって行われたかまで。" },
+    { key:"city", label:"自治体",
+      lead:"基礎管理情報として全ての記録を閲覧できます。補修履歴と材料情報は自治体のみです。" },
+    { key:"maint", label:"維持管理業者",
+      lead:"調査データとして、点検履歴と配管経路の記録一式を閲覧できます。" },
+    { key:"renew", label:"改築業者",
+      lead:"工事準備として配管経路を参照し、現地では施工支援ツールを利用できます。" }
+  ];
+
+  var ALL = ["public","city","maint","renew"];
+  var ITEMS = [
+    { t:"台帳記載事項", d:"取付管ID・取付管番号・現場名・現場住所・最終点検日・最終点検業者",
+      roles:ALL, at:"この画面の上部" },
+    { t:"位置情報", d:"座標と誤差半径（GPS登録値）",
+      roles:ALL, at:"この画面の上部" },
+    { t:"点検履歴", d:"2024-06-12 異状なし ／ 2026-08-19 軽微な浸入水（管口部）",
+      roles:["city","maint"] },
+    { t:"配管情報（配管経路）", d:"マッピング解析による配管経路・土工量・改築部材（PDF）",
+      roles:["city","maint","renew"], link:"report.pdf" },
+    { t:"配管情報（AR表示）", d:"埋設位置の重畳表示と掘削領域の検討（3D図面ビューアも同画面から）",
+      roles:["city","renew"], link:"https://kanisg26.github.io/AR-hyouji-26-test5/" },
+    { t:"配管映像", d:"管内映像サンプル。軽量版は約0.9MB、フル版は約3.0MB",
+      roles:["city","maint"],
+      links:[ { t:"軽量版", h:"video.mp4" }, { t:"フル版", h:"video_demo.mp4" } ] },
+    { t:"コメント写真集", d:"特記事項ごとの記録（写真欄）",
+      roles:["city","maint"], link:"photos.html" },
+    { t:"補修履歴・材料情報", d:"2025-02-03 部分ライニング 延長 2.4m ／ 硬質塩化ビニル管 φ150",
+      roles:["city","maint","renew"] }
+  ];
+
+  var GEO_FIELDS = [
+    { key:"lat", label:"緯度",             ph:"34.693738" },
+    { key:"lng", label:"経度",             ph:"135.502165" },
+    { key:"acc", label:"誤差半径（m）",     ph:"8" }
+  ];
+  var GEO_KEYS = ["lat","lng","acc"];
+  var geoMode = false;
+
+  var $ = function(id){ return document.getElementById(id); };
+  var enc = new TextEncoder(), dec = new TextDecoder();
+
+  var scanCtl = null, writeCtl = null;
+  // 座標は入力欄が正データ（geoオブジェクトは廃止）
+  var watchId = null, geoTimer = null, geoEnd = null, geoBest = null, geoStart = 0;
+
+  function esc(s){
+    return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){
+      return { "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c];
+    });
+  }
+  function clip(s,n){ s = String(s||""); return s.length > n ? s.slice(0,n) + "…" : s; }
+  function say(id, text, cls){
+    var e = $(id); e.textContent = text; e.className = "msg" + (cls ? " " + cls : "");
+  }
+
+  /* ───── 表示 ───── */
+
+  function buildRows(){
+    var dl = $("rows"); dl.innerHTML = "";
+    FIELDS.forEach(function(f){
+      var d = document.createElement("div");
+      d.innerHTML = '<dt>' + f.label + '</dt><dd class="empty" data-k="' + f.key + '"></dd>';
+      dl.appendChild(d);
+    });
+  }
+
+  function makeInput(f, into){
+    var w = document.createElement("div");
+    var lb = document.createElement("label");
+    var ip = document.createElement("input");
+    ip.id = "f_" + f.key; ip.type = f.type || "text";
+    if (f.ph) ip.placeholder = f.ph;
+    ip.addEventListener("input", updateMeter);
+    lb.setAttribute("for", ip.id); lb.textContent = f.label;
+    w.appendChild(lb); w.appendChild(ip);
+    $(into).appendChild(w);
+  }
+
+  function buildForm(){
+    $("pidForm").innerHTML = "";
+    $("form").innerHTML = "";
+    makeInput(PID, "pidForm");
+    FIELDS.forEach(function(f){ makeInput(f, "form"); });
+  }
+
+  function buildGeoForm(){
+    $("geoForm").innerHTML = "";
+    GEO_FIELDS.forEach(function(f){ makeInput(f, "geoForm"); });
+    GEO_KEYS.forEach(function(k){
+      var ip = $("f_" + k);
+      ip.setAttribute("inputmode", "decimal");
+      ip.addEventListener("input", function(){
+        var la = parseFloat($("f_lat").value), ln = parseFloat($("f_lng").value);
+        var ac = parseFloat($("f_acc").value);
+        if (isFinite(la) && isFinite(ln)) showGeo(la, ln, isFinite(ac) ? ac : null);
+      });
+    });
+  }
+
+  function setMode(on){
+    geoMode = !!on;
+    $("modeOn").setAttribute("aria-pressed", geoMode ? "true" : "false");
+    $("modeOff").setAttribute("aria-pressed", geoMode ? "false" : "true");
+    ["geoBlock","measBlock","geoForm"].forEach(function(id){
+      $(id).style.display = geoMode ? "" : "none";
+    });
+    $("modeNote").textContent = geoMode
+      ? "位置情報を含めてタグに記録します。屋内では緯度・経度を直接入力できます。"
+      : "位置情報は扱いません。取付管IDと点検記録だけをタグに記録します。";
+    updateMeter();
+  }
+
+  function buildRoles(){
+    var box = $("roleBtns"); box.innerHTML = "";
+    ROLES.forEach(function(r){
+      var btn = document.createElement("button");
+      btn.type = "button"; btn.textContent = r.label;
+      btn.setAttribute("aria-pressed", r.key === "public" ? "true" : "false");
+      btn.addEventListener("click", function(){ setRole(r.key); });
+      box.appendChild(btn);
+    });
+    $("tallyT").textContent = ITEMS.length;
+    setRole("public");
+  }
+
+  var LOCK_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="#9AA39B" stroke-width="1.9" stroke-linecap="round"><rect x="4" y="10.5" width="16" height="10.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>';
+  var LOCK_ON  = '<svg viewBox="0 0 24 24" fill="none" stroke="#1F5B41" stroke-width="1.9" stroke-linecap="round"><rect x="4" y="10.5" width="16" height="10.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 7.8-1.2"/></svg>';
+
+  function setRole(key){
+    var role = null;
+    ROLES.forEach(function(r, i){
+      var on = r.key === key;
+      $("roleBtns").children[i].setAttribute("aria-pressed", on ? "true" : "false");
+      if (on) role = r;
+    });
+    if (!role) return;
+
+    $("roleLead").textContent = role.lead;
+
+    var html = "", n = 0;
+    ITEMS.forEach(function(it){
+      var open = it.roles.indexOf(key) !== -1;
+      if (open) n++;
+      var tail;
+      if (!open)         tail = '<span class="go">非公開</span>';
+      else if (it.soon)  tail = '<span class="go">準備中</span>';
+      else if (it.links) tail = '<span class="gos">' + it.links.map(function(l){
+                           return '<a class="go" href="' + l.h + '" target="_blank" rel="noopener">' +
+                                  esc(l.t) + ' →</a>';
+                         }).join('') + '</span>';
+      else if (it.link)  tail = '<span class="go">開く →</span>';
+      else if (it.at)    tail = '<span class="go">表示中</span>';
+      else               tail = '<span class="go">閲覧可</span>';
+      var body = '<span class="k">' + (open ? LOCK_ON : LOCK_OFF) + '</span>' +
+                 '<span class="b"><span class="t">' + esc(it.t) + '</span>' +
+                 '<span class="d">' + esc(it.at || it.d) + '</span></span>' + tail;
+      html += (open && it.link && !it.soon)
+        ? '<a class="item" href="' + it.link + '" target="_blank" rel="noopener">' + body + '</a>'
+        : '<div class="item' + (open ? '' : ' off') + '">' + body + '</div>';
+    });
+
+    $("roleItems").innerHTML = html;
+    $("tallyN").textContent = n;
+    $("tallyBar").style.width = (n / ITEMS.length * 100) + "%";
+  }
+
+  function render(state, origin){
+    var pid = state.pid && String(state.pid).trim();
+    var v = $("pid");
+    v.textContent = pid || "未取得";
+    v.className = "val" + (pid ? "" : " blank");
+
+    FIELDS.forEach(function(f){
+      var dd = document.querySelector('#rows dd[data-k="' + f.key + '"]');
+      if (!dd) return;
+      var x = state[f.key] && String(state[f.key]).trim();
+      dd.textContent = x || "";
+      dd.className = x ? "" : "empty";
+    });
+
+    var o = $("origin");
+    o.className = "origin" + (origin ? " " + origin : "");
+    $("originText").textContent =
+      origin === "tag" ? "タグから直接読み取り" :
+      origin === "url" ? "タグのURLから表示"   : "情報源なし";
+
+    if (state.lat && state.lng) {
+      showGeo(parseFloat(state.lat), parseFloat(state.lng), state.acc ? parseFloat(state.acc) : null);
+    } else {
+      $("cLat").textContent = "—"; $("cLng").textContent = "—"; $("cAcc").textContent = "—";
+      $("mapLink").hidden = true;
+      drawPlan(null);
+    }
+  }
+
+  function fillForm(state){
+    [PID].concat(FIELDS, GEO_FIELDS).forEach(function(f){
+      var ip = $("f_" + f.key);
+      if (ip && state[f.key] != null) ip.value = state[f.key];
+    });
+    updateMeter();
+  }
+
+  /* ───── 位置の作図 ───── */
+
+  function niceStep(m){
+    var steps = [1,2,5,10,20,50,100,200,500];
+    for (var i=0;i<steps.length;i++) if (steps[i] >= m) return steps[i];
+    return 1000;
+  }
+
+  function drawPlan(acc){
+    var svg = $("plan");
+    var W = 300, H = 150, cx = 150, cy = 72;
+
+    var g = '<defs><pattern id="grid" width="15" height="15" patternUnits="userSpaceOnUse">' +
+            '<path d="M15 0H0V15" fill="none" stroke="#E4E7DF" stroke-width="1"/></pattern></defs>' +
+            '<rect width="' + W + '" height="' + H + '" fill="url(#grid)"/>';
+
+    if (!acc || !isFinite(acc) || acc <= 0) {
+      g += '<text x="' + cx + '" y="' + (cy + 5) + '" text-anchor="middle" ' +
+           'font-family="sans-serif" font-size="12" fill="#9AA39B">位置は未取得です</text>';
+      svg.innerHTML = g;
+      return;
+    }
+
+    var rPx = 46;                 // 誤差円の描画半径は固定
+    var mpp = acc / rPx;          // メートル / ピクセル
+
+    // 誤差円
+    g += '<circle cx="' + cx + '" cy="' + cy + '" r="' + rPx + '" fill="#1F5B41" fill-opacity="0.07" ' +
+         'stroke="#1F5B41" stroke-opacity="0.5" stroke-width="1.2" stroke-dasharray="4 3"/>';
+
+    // 蓋（直径60cm）の実寸比較
+    var lidPx = 0.6 / mpp;
+    if (lidPx >= 2.2) {
+      g += '<circle cx="' + cx + '" cy="' + cy + '" r="' + lidPx.toFixed(1) + '" fill="none" stroke="#B0392A" stroke-width="1.2"/>';
+      g += '<line x1="' + (cx + lidPx + 3) + '" y1="' + cy + '" x2="' + (cx + rPx - 6) + '" y2="' + cy + '" stroke="#B0392A" stroke-width="0.8" stroke-dasharray="2 2"/>';
+      g += '<text x="' + (cx + rPx + 4) + '" y="' + (cy + 3.5) + '" font-family="sans-serif" font-size="9" fill="#B0392A">ふた 60cm</text>';
+    }
+
+    // 推定点
+    g += '<line x1="' + (cx-7) + '" y1="' + cy + '" x2="' + (cx+7) + '" y2="' + cy + '" stroke="#1F5B41" stroke-width="1.4"/>';
+    g += '<line x1="' + cx + '" y1="' + (cy-7) + '" x2="' + cx + '" y2="' + (cy+7) + '" stroke="#1F5B41" stroke-width="1.4"/>';
+    g += '<circle cx="' + cx + '" cy="' + cy + '" r="2.6" fill="#1F5B41"/>';
+
+    // 誤差の注記
+    g += '<text x="' + cx + '" y="' + (cy - rPx - 8) + '" text-anchor="middle" ' +
+         'font-family="ui-monospace,monospace" font-size="11" fill="#1F5B41">±' +
+         (acc >= 10 ? Math.round(acc) : acc.toFixed(1)) + ' m</text>';
+
+    // スケールバー
+    var step = niceStep(60 * mpp);
+    var barPx = step / mpp;
+    var bx = 16, by = H - 20;
+    g += '<line x1="' + bx + '" y1="' + by + '" x2="' + (bx + barPx) + '" y2="' + by + '" stroke="#5C655F" stroke-width="1.4"/>';
+    g += '<line x1="' + bx + '" y1="' + (by-4) + '" x2="' + bx + '" y2="' + (by+4) + '" stroke="#5C655F" stroke-width="1.4"/>';
+    g += '<line x1="' + (bx+barPx) + '" y1="' + (by-4) + '" x2="' + (bx+barPx) + '" y2="' + (by+4) + '" stroke="#5C655F" stroke-width="1.4"/>';
+    g += '<text x="' + (bx + barPx + 6) + '" y="' + (by + 4) + '" font-family="sans-serif" font-size="10" fill="#5C655F">' + step + ' m</text>';
+
+    svg.innerHTML = g;
+  }
+
+  // 測位結果を入力欄にも反映する
+  function setGeo(lat, lng, acc){
+    if (!isFinite(lat) || !isFinite(lng)) return;
+    $("f_lat").value = lat.toFixed(6);
+    $("f_lng").value = lng.toFixed(6);
+    $("f_acc").value = acc ? String(Math.round(acc)) : "";
+    showGeo(lat, lng, acc);
+    updateMeter();
+  }
+
+  // 表示だけ更新する
+  function showGeo(lat, lng, acc){
+    if (!isFinite(lat) || !isFinite(lng)) return;
+    $("cLat").textContent = lat.toFixed(6);
+    $("cLng").textContent = lng.toFixed(6);
+    $("cAcc").textContent = acc ? "± " + (acc >= 10 ? Math.round(acc) : acc.toFixed(1)) + " m" : "—";
+    var a = $("mapLink");
+    a.href = "https://www.google.com/maps?q=" + lat.toFixed(6) + "," + lng.toFixed(6);
+    a.hidden = false;
+    drawPlan(acc);
+  }
+
+  /* ───── 測位 ───── */
+
+  function startGeo(){
+    if (!navigator.geolocation) { say("geoMsg","この端末では位置情報を取得できません。","err"); return; }
+    geoBest = null; geoStart = Date.now();
+    $("geoBtn").disabled = true;
+    $("geoBtn").textContent = "測位中";
+    $("geoStop").disabled = false;
+    say("geoMsg","測位中… 静止したままお待ちください。","busy");
+
+    watchId = navigator.geolocation.watchPosition(function(p){
+      if (!geoBest || p.coords.accuracy < geoBest.coords.accuracy) geoBest = p;
+      var el = Math.round((Date.now() - geoStart)/1000);
+      say("geoMsg",
+        "測位中 " + el + "秒 ／ 今回 ±" + Math.round(p.coords.accuracy) +
+        " m ／ 最良 ±" + Math.round(geoBest.coords.accuracy) + " m", "busy");
+      setGeo(geoBest.coords.latitude, geoBest.coords.longitude, geoBest.coords.accuracy);
+    }, function(err){
+      finishGeo();
+      var m = err.code === 1 ? "位置情報の使用が許可されていません。端末とブラウザの設定で許可してください。"
+            : err.code === 2 ? "位置を特定できませんでした。屋外の空が開けた場所でお試しください。"
+            : err.code === 3 ? "時間内に測位できませんでした。もう一度お試しください。"
+            : "測位に失敗しました。";
+      say("geoMsg", m, "err");
+    }, { enableHighAccuracy:true, maximumAge:0, timeout:20000 });
+
+    geoEnd = setTimeout(function(){ finishGeo(true); }, GEO_MS);
+  }
+
+  function finishGeo(auto){
+    if (watchId != null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+    if (geoEnd) { clearTimeout(geoEnd); geoEnd = null; }
+    $("geoBtn").disabled = false;
+    $("geoBtn").textContent = "現在地を取得（30秒）";
+    $("geoStop").disabled = true;
+    if (geoBest) {
+      var el = Math.round((Date.now() - geoStart)/1000);
+      say("geoMsg",
+        "確定しました。誤差 ±" + Math.round(geoBest.coords.accuracy) + " m（" + el + "秒間の最良値）。" +
+        (auto ? "" : " 続けたい場合はもう一度取得してください。"), "ok");
+    }
+  }
+
+  /* ───── データ組み立て ───── */
+
+  function collect(){
+    var s = {};
+    [PID].concat(FIELDS).forEach(function(f){
+      var ip = $("f_" + f.key);
+      var v = ip ? ip.value.trim() : "";
+      if (v) s[f.key] = v;
+    });
+    if (geoMode) {
+      var la = parseFloat($("f_lat").value), ln = parseFloat($("f_lng").value);
+      var ac = parseFloat($("f_acc").value);
+      if (isFinite(la) && isFinite(ln)) {
+        s.lat = la.toFixed(6);
+        s.lng = ln.toFixed(6);
+        if (isFinite(ac)) s.acc = String(Math.round(ac));
+      }
+    }
+    return s;
+  }
+
+  function buildUrl(s){
+    var p = new URLSearchParams();
+    [PID].concat(FIELDS).forEach(function(f){ if (s[f.key]) p.set(f.key, s[f.key]); });
+    GEO_KEYS.forEach(function(k){ if (s[k]) p.set(k, s[k]); });
+    if (geoMode) p.set("geo", "1");
+    var q = p.toString();
+    return location.origin + location.pathname + (q ? "?" + q : "");
+  }
+
+  function buildText(s){
+    var o = { v: SCHEMA };
+    [PID].concat(FIELDS).forEach(function(f){ if (s[f.key]) o[f.key] = s[f.key]; });
+    GEO_KEYS.forEach(function(k){ if (s[k]) o[k] = s[k]; });
+    return JSON.stringify(o);
+  }
+
+  // NDEF の概算。URIレコードは "https://" が1バイトに圧縮される。
+  function sizeOf(url, text){
+    var u = url.replace(/^https:\/\/(www\.)?/,"").replace(/^http:\/\//,"");
+    var a = enc.encode(u).length + 1 + 6;
+    var b = enc.encode(text).length + 3 + 6;
+    return { url:a, text:b, total:a + b + 4 };
+  }
+
+  function updateMeter(){
+    var s = collect();
+    var sz = sizeOf(buildUrl(s), buildText(s));
+    $("barU").style.width = Math.min(100, sz.url / CAPACITY * 100) + "%";
+    $("barT").style.width = Math.min(100, sz.text / CAPACITY * 100) + "%";
+    var b = $("bytes");
+    b.textContent = sz.total + " / " + CAPACITY + " バイト";
+    b.style.color = sz.total > CAPACITY ? "#8C2E22" : sz.total > CAPACITY * .8 ? "#6E5210" : "";
+    return sz;
+  }
+
+  /* ───── NFC 対応判定 ───── */
+
+  function support(){
+    if (!("NDEFReader" in window)) {
+      if (/iPhone|iPad|iPod/.test(navigator.userAgent))
+        return { ok:false, msg:"iPhone・iPad のブラウザは NFC の読み書きに対応していません。閲覧のみ利用できます。書き込みは Android の Chrome で行ってください。" };
+      if (!window.isSecureContext)
+        return { ok:false, msg:"HTTPS で開いていないため NFC を利用できません。公開URLから開き直してください。" };
+      return { ok:false, msg:"このブラウザは Web NFC に対応していません。Android の Chrome で開いてください。" };
+    }
+    if (!window.isSecureContext)
+      return { ok:false, msg:"HTTPS で開いていないため NFC を利用できません。公開URLから開き直してください。" };
+    return { ok:true, msg:"" };
+  }
+
+  function explain(err){
+    var n = err && err.name;
+    if (n === "NotAllowedError")   return "NFC の使用が許可されていません。端末設定で NFC を ON にし、許可ダイアログで「許可」を選んでください。";
+    if (n === "NotSupportedError") return "この端末では NFC を利用できません。";
+    if (n === "NotReadableError")  return "タグを読み取れませんでした。NDEF 形式でないか、他のアプリが使用中の可能性があります。";
+    if (n === "NetworkError")      return "タグが離れました。かざしたまま動かさずに、もう一度お試しください。";
+    if (n === "AbortError")        return "中止しました。";
+    if (n === "InvalidStateError") return "別の NFC 操作が実行中です。少し待ってからお試しください。";
+    return "エラーが発生しました：" + (n || "") + " " + (err && err.message ? err.message : "");
+  }
+
+  /* ───── 読み取り ───── */
+
+  function decodeRecord(r){
+    try {
+      if (r.recordType === "text") return new TextDecoder(r.encoding || "utf-8").decode(r.data);
+      return dec.decode(r.data);
+    } catch(e){ return "(復号できません)"; }
+  }
+
+  function parseMessage(message){
+    var state = null, rows = [];
+
+    for (var i = 0; i < message.records.length; i++) {
+      var r = message.records[i];
+      var body = (r.recordType === "empty") ? "" : decodeRecord(r);
+      rows.push({
+        n: i + 1,
+        type: r.recordType + (r.mediaType ? " / " + r.mediaType : "") + (r.lang ? " [" + r.lang + "]" : ""),
+        size: r.data ? r.data.byteLength : 0,
+        body: body
+      });
+      if (!state && r.recordType === "text") {
+        try { var o = JSON.parse(body); if (o && typeof o === "object") state = o; } catch(e){}
+      }
+    }
+
+    if (!state) {
+      for (var j = 0; j < message.records.length; j++) {
+        var rec = message.records[j];
+        if (rec.recordType !== "url" && rec.recordType !== "absolute-url") continue;
+        try {
+          var u = new URL(dec.decode(rec.data));
+          if (u.searchParams.toString()) state = Object.fromEntries(u.searchParams);
+        } catch(e){}
+        break;
+      }
+    }
+    return { state:state, rows:rows };
+  }
+
+  function showRaw(rows, serial){
+    var h = '<table class="raw"><thead><tr><th>#</th><th>レコード</th><th>byte</th></tr></thead><tbody>';
+    rows.forEach(function(r){
+      h += '<tr><td class="n">' + r.n + '</td><td><div class="ty">' + esc(r.type) +
+           '</div><div class="bd">' + esc(clip(r.body, 100)) + '</div></td>' +
+           '<td class="b">' + r.size + '</td></tr>';
+    });
+    h += '</tbody></table>';
+    if (serial) {
+      h += '<p class="uid"><b>タグUID</b> <code>' + esc(serial) + '</code><br>' +
+           '製造時に書き込まれた固有番号です。書き換えも複製もできません。</p>';
+    }
+    $("rawWrap").innerHTML = h;
+  }
+
+  function startScan(){
+    var sp = support();
+    if (!sp.ok) { say("scanMsg", sp.msg, "err"); return; }
+
+    stopScan();
+    scanCtl = new AbortController();
+    var ndef = new NDEFReader();
+
+    ndef.onreading = function(ev){
+      var res = parseMessage(ev.message);
+      showRaw(res.rows, ev.serialNumber);
+      if (res.state) {
+        render(res.state, "tag");
+        fillForm(res.state);
+        say("scanMsg", "読み取りました。レコード " + res.rows.length + " 件／UID " + (ev.serialNumber || "不明"), "ok");
+      } else {
+        say("scanMsg", "読み取りましたが、取付管の情報が入っていません。下の欄を埋めて書き込んでください。", "busy");
+      }
+    };
+    ndef.onreadingerror = function(){
+      say("scanMsg", "タグを読み取れませんでした。かざす位置を変えてもう一度お試しください。", "err");
+    };
+
+    ndef.scan({ signal: scanCtl.signal }).then(function(){
+      say("scanMsg", "タグをかざしてください…", "busy");
+      $("scanBtn").disabled = true; $("scanBtn").textContent = "読み取り中";
+      $("stopBtn").disabled = false;
+    }).catch(function(err){
+      say("scanMsg", explain(err), "err"); stopScan();
+    });
+  }
+
+  function stopScan(){
+    if (scanCtl) { scanCtl.abort(); scanCtl = null; }
+    $("scanBtn").disabled = false; $("scanBtn").textContent = "読み取りを開始";
+    $("stopBtn").disabled = true;
+  }
+
+  /* ───── 書き込み ───── */
+
+  function writeTag(){
+    var sp = support();
+    if (!sp.ok) { say("writeMsg", sp.msg, "err"); return; }
+
+    var s = collect();
+    if (!s.pid) { say("writeMsg", "取付管IDを入力してください。", "err"); return; }
+
+    var sz = updateMeter();
+    if (sz.total > CAPACITY) {
+      say("writeMsg", "データが " + sz.total + " バイトで、タグの容量 " + CAPACITY +
+          " バイトを超えています。現場名や住所を短くしてください。", "err");
+      return;
+    }
+
+    var url = buildUrl(s), text = buildText(s);
+    var wasScanning = !!scanCtl;
+    stopScan();
+
+    writeCtl = new AbortController();
+    var ndef = new NDEFReader();
+
+    $("writeBtn").disabled = true;
+    $("writeBtn").classList.add("armed");
+    $("writeBtn").textContent = "タグをかざしてください";
+    $("cancelBtn").disabled = false;
+    say("writeMsg", "タグをかざしたまま動かさないでください…", "busy");
+
+    ndef.write({
+      records: [
+        { recordType:"url",  data:url },
+        { recordType:"text", data:text, lang:"ja" }
+      ]
+    }, { overwrite:true, signal:writeCtl.signal }).then(function(){
+      say("writeMsg", "書き込みました（" + sz.total + " バイト）。もう一度かざすと更新後の内容が表示されます。", "ok");
+      render(s, "url");
+      startScan();
+      say("scanMsg", "確認のため、もう一度タグをかざしてください…", "busy");
+    }).catch(function(err){
+      say("writeMsg", explain(err), "err");
+      if (wasScanning) startScan();
+    }).then(function(){
+      writeCtl = null;
+      $("writeBtn").disabled = false;
+      $("writeBtn").classList.remove("armed");
+      $("writeBtn").textContent = "タグに書き込む";
+      $("cancelBtn").disabled = true;
+    });
+  }
+
+  /* ───── 起動 ───── */
+
+  buildRows();
+  buildForm();
+  buildGeoForm();
+  buildRoles();
+
+  var q = Object.fromEntries(new URLSearchParams(location.search));
+  var has = [PID].concat(FIELDS, GEO_FIELDS).some(function(f){ return q[f.key]; });
+
+  // タグのURLに geo=1 があるか、座標が入っていれば位置情報ありで開く
+  setMode(q.geo === "1" || (!!q.lat && !!q.lng));
+
+  if (has) { fillForm(q); render(q, "url"); }
+  else     { render({}, null); updateMeter(); }
+
+
+  $("scanBtn").addEventListener("click", startScan);
+  $("stopBtn").addEventListener("click", function(){
+    stopScan(); say("scanMsg", "読み取りを停止しました。", "");
+  });
+  $("writeBtn").addEventListener("click", writeTag);
+  $("cancelBtn").addEventListener("click", function(){ if (writeCtl) writeCtl.abort(); });
+  $("geoBtn").addEventListener("click", startGeo);
+  $("geoStop").addEventListener("click", function(){ finishGeo(false); });
+  $("modeOn").addEventListener("click", function(){ setMode(true); });
+  $("modeOff").addEventListener("click", function(){ setMode(false); });
+
+  var sp = support();
+  if (sp.ok) {
+    say("scanMsg", "「読み取りを開始」を押してからタグをかざしてください。", "");
+  } else {
+    say("scanMsg", sp.msg, "err");
+    say("writeMsg", sp.msg, "err");
+    $("scanBtn").disabled = true;
+    $("writeBtn").disabled = true;
+    $("offlineTip").style.display = "none";
+  }
+})();
+</script>
+</body>
+</html>
