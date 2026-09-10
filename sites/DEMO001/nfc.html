@@ -358,6 +358,14 @@
   .kbadge.r{background:var(--amber)}
   .kbadge.c{background:var(--seal)}
 
+  /* ══ 表示モード切替 ════════════════════ */
+  .vseg{display:flex; border:1px solid var(--rule); background:var(--white);
+    border-radius:9px; overflow:hidden; margin-bottom:14px}
+  .vseg button{flex:1; border:0; background:transparent; color:var(--ink2);
+    font-size:12.5px; font-weight:600; padding:10px 6px; cursor:pointer}
+  .vseg button + button{border-left:1px solid var(--rule2)}
+  .vseg button[aria-pressed="true"]{background:var(--green); color:var(--onGreen)}
+
   /* ══ 基本情報 / 回の記録 ═══════════════ */
   .grp{font-family:var(--mono); font-size:10px; letter-spacing:.16em; color:var(--ink2);
     margin:16px 0 2px; padding-bottom:6px; border-bottom:1px solid var(--rule2)}
@@ -525,6 +533,10 @@
       <h2>閲覧できる情報 <small>ACCESS</small></h2>
       <div class="gate" style="border-radius:12px; border-top:1px solid var(--rule)">
         <p class="lead" id="roleLead"></p>
+        <div class="vseg" role="group" aria-label="表示範囲">
+          <button type="button" id="viewRec" aria-pressed="true">この回で絞る</button>
+          <button type="button" id="viewAll" aria-pressed="false">全項目を見る</button>
+        </div>
         <div class="tally"><span>閲覧できる項目</span><span><b id="tallyN">0</b> / <span id="tallyT">0</span></span></div>
         <div class="tbar"><i id="tallyBar" style="width:0%"></i></div>
 
@@ -1288,8 +1300,37 @@
            tail + '</div>';
   }
 
+  function setView(all){
+    listMode = !!all;
+    $("viewAll").setAttribute("aria-pressed", listMode ? "true" : "false");
+    $("viewRec").setAttribute("aria-pressed", listMode ? "false" : "true");
+    renderItems();
+  }
+
   function renderItems(){
     if (!$("baseItems")) return;
+
+    if (listMode) {
+      // 回による絞り込みをせず、扱う情報を全部並べる
+      $("baseWrap").hidden = true;
+      $("recCap").innerHTML = "<b>このプラットフォームで扱う情報</b>" +
+        "<small>回による絞り込みをせず、全項目を表示しています</small>";
+      $("roleItems").innerHTML = ITEMS.map(function(it){
+        var tag = it.base
+          ? '<span class="srcbtn" style="cursor:default">基本情報</span>'
+          : '<span class="srcbtn" style="cursor:default; color:var(--ink2); border-color:var(--rule2); background:var(--tint)">' +
+            (it.kinds || []).map(function(k){ return kindOf(k) ? kindOf(k).label : k; }).join("・") + 'の回</span>';
+        return itemHtml(it, tag);
+      }).join("");
+
+      var na = ITEMS.filter(function(it){ return it.roles.indexOf(currentRole) !== -1; }).length;
+      $("tallyN").textContent = na;
+      $("tallyT").textContent = ITEMS.length;
+      $("tallyBar").style.width = (na / ITEMS.length * 100) + "%";
+      return;
+    }
+
+    $("baseWrap").hidden = false;
     var base = baseItems(), rec = recItems(), e = histList[histSel];
 
     $("baseCap").innerHTML = "<b>基本情報</b>" +
@@ -1334,6 +1375,7 @@
   var histList = [];      // タグから復元した履歴
   var histSel  = 0;       // 表示中の回（0＝最新）
   var unlocked = false;   // 自治体による台帳項目の解錠
+  var listMode = false;   // 全項目を種別で絞らず並べる（デモ用）
   var kind     = "I";     // 今回の更新種別
 
   /* ══ 表示 ══════════════════════════════ */
@@ -1827,6 +1869,8 @@
   $("resetBtn").addEventListener("click", backToStandby);
   $("fab").addEventListener("click", function(){ openScanner(); buzz(15); });
   $("syncBtn").addEventListener("click", syncHistory);
+  $("viewAll").addEventListener("click", function(){ setView(true); buzz(10); });
+  $("viewRec").addEventListener("click", function(){ setView(false); buzz(10); });
   $("unlockBtn").addEventListener("click", function(){
     if (unlocked) { unlocked = false; applyLock(); toast("台帳項目を施錠しました"); return; }
     if (currentRole !== "city") { toast("台帳項目の書き換えは自治体のみです", "err"); return; }
