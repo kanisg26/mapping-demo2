@@ -1,0 +1,17 @@
+{
+  "name": "取付管ライフサイクル情報プラットフォーム",
+  "short_name": "取付管ID",
+  "description": "NFCタグで取付管を同定し、現地で記録を確認・更新するためのデモアプリ",
+  "lang": "ja",
+  "start_url": "./nfc.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1F5B41",
+  "theme_color": "#1F5B41",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

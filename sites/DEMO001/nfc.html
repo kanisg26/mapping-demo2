@@ -2,337 +2,629 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#F1F2EE">
-<title>取付管 現地確認票 ｜ DEMO001（見本）</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>取付管ID ｜ DEMO001（見本）</title>
+
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="取付管ID">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#F1F2EE" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0D110F" media="(prefers-color-scheme: dark)">
+
 <style>
   :root{
-    --paper:#F1F2EE;      /* 再生紙 */
-    --white:#FFFFFF;      /* 記入欄 */
-    --tint:#E5E8E1;       /* 項目名の地色 */
-    --ink:#1C221F;
-    --ink2:#5C655F;
-    --rule:#B9C0B7;       /* 主罫 */
-    --rule2:#DBDFD7;      /* 副罫 */
-    --green:#1F5B41;      /* 下水道の埋設標示色 */
-    --green2:#E7EFE9;
-    --seal:#B0392A;       /* 朱 */
-    --amber:#8A6410;
+    --shell:#E8EAE4; --paper:#F1F2EE; --white:#FFFFFF; --tint:#E5E8E1;
+    --ink:#1C221F; --ink2:#5C655F; --rule:#B9C0B7; --rule2:#DBDFD7;
+    --green:#1F5B41; --green2:#E7EFE9; --onGreen:#FFFFFF; --greenLine:#A8C4B4;
+    --seal:#B0392A; --amber:#8A6410; --ok:#17452F; --err:#8C2E22;
+    --grid:#E4E7DF; --plan:#FBFBF9;
     --mincho:"Hiragino Mincho ProN","Yu Mincho",YuMincho,"Noto Serif JP","Times New Roman",serif;
     --gothic:"Hiragino Kaku Gothic ProN","Yu Gothic",YuGothic,"Noto Sans JP",system-ui,sans-serif;
     --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace;
+    --bar:56px;
   }
-  *{box-sizing:border-box}
-  html,body{margin:0}
+  @media (prefers-color-scheme: dark){
+    :root{
+      --shell:#0D110F; --paper:#141917; --white:#1A201D; --tint:#222926;
+      --ink:#E9EDE8; --ink2:#95A19A; --rule:#39423D; --rule2:#2B332F;
+      --green:#5FBF92; --green2:#16261E; --onGreen:#0D110F; --greenLine:#2E5F48;
+      --seal:#E0806F; --amber:#D3A24A; --ok:#8FD9B4; --err:#F0A79B;
+      --grid:#232B27; --plan:#11150F;
+    }
+  }
+
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0; height:100%}
   body{
-    background:var(--paper); color:var(--ink); font-family:var(--gothic);
-    line-height:1.62; -webkit-font-smoothing:antialiased; padding-bottom:64px;
-    font-size:15px;
+    background:var(--shell); color:var(--ink); font-family:var(--gothic);
+    font-size:15px; line-height:1.62; -webkit-font-smoothing:antialiased;
+    overscroll-behavior:none;
   }
-  .sheet{max-width:560px; margin:0 auto; padding:0 16px}
+  button{font-family:inherit}
 
-  /* ── 帳票ヘッダ ── */
-  .head{display:flex; align-items:flex-start; gap:14px; padding:22px 0 14px;
-    border-bottom:2px solid var(--ink)}
-  .head .t{flex:1; min-width:0}
-  .kind{font-family:var(--mono); font-size:10.5px; letter-spacing:.24em;
-    color:var(--green); margin:0 0 5px}
-  .head h1{font-family:var(--mincho); font-size:22px; font-weight:600;
-    margin:0; letter-spacing:.06em}
-  .head .sub{margin:5px 0 0; font-size:12px; color:var(--ink2)}
-  .seal{flex:0 0 62px; width:62px; height:62px; border:2.5px solid var(--seal);
-    border-radius:5px; color:var(--seal); display:grid; place-items:center;
-    font-family:var(--mincho); font-size:19px; font-weight:600; line-height:1.1;
-    letter-spacing:.06em; transform:rotate(-7deg); opacity:.88; text-align:center}
+  /* ══ 待機画面 ══════════════════════════ */
+  .standby{
+    position:fixed; inset:0; z-index:40; background:var(--shell);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:26px 22px calc(26px + env(safe-area-inset-bottom)); text-align:center;
+  }
+  .standby[hidden]{display:none}
+  .pulse{position:relative; width:190px; height:190px; margin-bottom:26px;
+    display:grid; place-items:center}
+  .pulse i{position:absolute; inset:0; border:2px solid var(--green);
+    border-radius:50%; opacity:0; animation:ring 3s ease-out infinite}
+  .pulse i:nth-child(2){animation-delay:1s}
+  .pulse i:nth-child(3){animation-delay:2s}
+  .pulse.live i{animation-duration:1.5s; border-width:2.5px}
+  .pulse.live i:nth-child(2){animation-delay:.5s}
+  .pulse.live i:nth-child(3){animation-delay:1s}
+  @keyframes ring{
+    0%{transform:scale(.34); opacity:.85}
+    65%{opacity:.18}
+    100%{transform:scale(1); opacity:0}
+  }
+  .pulse .core{width:96px; height:96px; border-radius:50%; background:var(--green);
+    display:grid; place-items:center; position:relative; z-index:1}
+  .pulse .core svg{width:48px; height:48px}
+  @media (prefers-reduced-motion:reduce){ .pulse i{animation:none; opacity:.25} }
 
-  /* ── 表示モード切替 ── */
-  .mode{display:flex; border:1px solid var(--rule); background:var(--white); margin-top:14px}
-  .mode button{flex:1; border:0; background:transparent; color:var(--ink2);
-    font-family:var(--gothic); font-size:13px; font-weight:600; padding:11px 6px;
-    cursor:pointer; letter-spacing:.04em}
-  .mode button + button{border-left:1px solid var(--rule2)}
-  .mode button[aria-pressed="true"]{background:var(--green); color:#fff}
-  .mode button:focus-visible{outline:2px solid var(--green); outline-offset:-3px}
-  .mode-note{font-size:11.5px; color:var(--ink2); margin:6px 2px 0; letter-spacing:.02em}
+  .standby h1{font-family:var(--mincho); font-size:21px; font-weight:600;
+    letter-spacing:.06em; margin:0 0 8px}
+  .standby p{font-size:13px; color:var(--ink2); margin:0 0 26px; max-width:300px; line-height:1.8}
+  .standby .acts{width:100%; max-width:320px}
+  .standby .brand{position:absolute; top:calc(20px + env(safe-area-inset-top));
+    font-family:var(--mono); font-size:10px; letter-spacing:.24em; color:var(--ink2)}
 
-  /* ── 不変マーク／権限 ── */
-  .tagmark{display:inline-block; font-family:var(--mono); font-size:9.5px;
-    letter-spacing:.1em; color:var(--seal); border:1px solid var(--seal);
-    padding:1px 5px; margin-left:7px; vertical-align:2px}
-  .role{display:grid; grid-template-columns:repeat(2,1fr); border:1px solid var(--rule);
-    background:var(--white)}
-  .role button{border:0; background:transparent; color:var(--ink2);
-    font-family:var(--gothic); font-size:12.5px; font-weight:600; padding:11px 4px;
-    cursor:pointer; border-top:1px solid var(--rule2); border-left:1px solid var(--rule2)}
-  .role button:nth-child(-n+2){border-top:0}
-  .role button:nth-child(odd){border-left:0}
-  .role button[aria-pressed="true"]{background:var(--green); color:#fff}
-  .role button:focus-visible{outline:2px solid var(--green); outline-offset:-3px}
-  .gate{border:1px solid var(--rule); border-top:0; background:var(--white); padding:13px 14px}
-  .gate .lead{font-size:12.5px; color:var(--ink2); margin:0 0 12px; line-height:1.7}
-  .tally{display:flex; align-items:baseline; justify-content:space-between;
-    font-size:11.5px; color:var(--ink2); letter-spacing:.04em; margin-bottom:6px}
-  .tally b{font-family:var(--mono); font-size:14px; color:var(--green)}
-  .tbar{height:6px; border:1px solid var(--rule2); background:var(--paper); margin-bottom:6px}
-  .tbar i{display:block; height:100%; background:var(--green); transition:width .3s ease}
-  .item{display:flex; gap:11px; align-items:flex-start; padding:12px 0;
-    border-top:1px solid var(--rule2); text-decoration:none; color:inherit}
-  .item .k{flex:0 0 18px; width:18px; margin-top:2px}
-  .item .b{flex:1; min-width:0}
-  .item .t{font-size:14.5px; font-weight:600; letter-spacing:.02em}
-  .item .d{font-size:12px; color:var(--ink2); line-height:1.6; margin-top:2px}
-  .item .gos{flex:0 0 auto; align-self:center; display:flex; flex-direction:column; gap:5px}
-  a.go{text-decoration:none; display:block; text-align:center}
-  @media(hover:hover){a.go:hover{background:#D6E6DC}}
-  .item .go{flex:0 0 auto; align-self:center; font-family:var(--mono); font-size:11px;
-    color:var(--green); border:1px solid #A8C4B4; background:var(--green2); padding:4px 8px}
-  .item.off{opacity:.4}
-  .item.off .go{color:var(--ink2); border-color:var(--rule2); background:var(--tint)}
-  @media(hover:hover){a.item:hover .t{text-decoration:underline}}
-  .sim{margin-top:12px; padding:9px 11px; border:1px dashed var(--seal);
-    color:#8C2E22; font-size:11.5px; line-height:1.6}
+  /* ══ アプリ枠 ══════════════════════════ */
+  .app[hidden]{display:none}
+  .appbar{
+    position:sticky; top:0; z-index:20; background:var(--green); color:var(--onGreen);
+    padding:calc(10px + env(safe-area-inset-top)) 16px 10px;
+    display:flex; align-items:center; gap:12px;
+  }
+  .appbar .lbl{font-family:var(--mono); font-size:9.5px; letter-spacing:.2em; opacity:.75}
+  .appbar .idv{font-family:var(--mono); font-size:15px; font-weight:600;
+    letter-spacing:.06em; word-break:break-all; line-height:1.35}
+  .appbar .src{margin-left:auto; flex:0 0 auto; font-family:var(--mono); font-size:9.5px;
+    letter-spacing:.08em; border:1px solid currentColor; border-radius:3px;
+    padding:3px 7px; opacity:.85; white-space:nowrap}
 
-  /* ── 台帳カード ── */
-  .rec{border:1px solid var(--rule); background:var(--white); margin-top:20px}
-  .rec > .cap{font-family:var(--mono); font-size:10.5px; letter-spacing:.2em;
-    color:var(--ink2); background:var(--tint); padding:7px 12px;
-    border-bottom:1px solid var(--rule)}
+  main{padding:0 16px calc(var(--bar) + 26px + env(safe-area-inset-bottom))}
+  .tab[hidden]{display:none}
 
-  .no{padding:16px 14px 14px; border-bottom:1px solid var(--rule)}
-  .no .lbl{font-size:11.5px; color:var(--ink2); letter-spacing:.1em; margin-bottom:6px}
-  .no .val{font-family:var(--mincho); font-size:27px; font-weight:600;
-    letter-spacing:.1em; word-break:break-all; line-height:1.3}
-  .no .val.blank{color:var(--rule)}
-  .origin{display:inline-flex; align-items:center; gap:7px; margin-top:10px;
-    font-family:var(--mono); font-size:10.5px; letter-spacing:.08em;
-    color:var(--ink2); border:1px solid var(--rule2); padding:4px 9px; border-radius:3px}
-  .origin i{width:7px; height:7px; border-radius:50%; background:var(--rule); display:block}
-  .origin.tag{color:var(--green); border-color:#A8C4B4; background:var(--green2)}
-  .origin.tag i{background:var(--green)}
-  .origin.url{color:var(--amber); border-color:#D9C89A; background:#FAF4E4}
-  .origin.url i{background:var(--amber)}
+  .tabbar{
+    position:fixed; left:0; right:0; bottom:0; z-index:30; display:flex;
+    background:var(--white); border-top:1px solid var(--rule);
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  .tabbar button{flex:1; border:0; background:none; color:var(--ink2);
+    padding:7px 2px 8px; cursor:pointer; display:flex; flex-direction:column;
+    align-items:center; gap:2px; font-size:10.5px; letter-spacing:.06em}
+  .tabbar button svg{width:23px; height:23px}
+  .tabbar button[aria-current="page"]{color:var(--green); font-weight:600}
+  .tabbar .n{position:absolute; transform:translate(15px,-3px); font-family:var(--mono);
+    font-size:9px; background:var(--seal); color:#fff; border-radius:8px; padding:0 4px}
 
-  dl.rows{margin:0}
-  dl.rows > div{display:grid; grid-template-columns:96px 1fr; border-bottom:1px solid var(--rule2)}
-  dl.rows > div:last-child{border-bottom:0}
-  dl.rows dt{margin:0; padding:11px 12px; font-size:12.5px; color:var(--ink2);
-    background:var(--tint); border-right:1px solid var(--rule2); letter-spacing:.06em}
-  dl.rows dd{margin:0; padding:11px 12px; font-size:15px; min-height:22px; word-break:break-all}
-  dl.rows dd.empty::after{content:"—"; color:var(--rule)}
-
-  /* ── 見出し ── */
-  h2{font-family:var(--mincho); font-size:16px; font-weight:600; letter-spacing:.08em;
-    margin:32px 0 12px; padding-bottom:7px; border-bottom:1px solid var(--rule);
-    display:flex; align-items:baseline; gap:10px}
-  h2 small{font-family:var(--mono); font-size:10px; letter-spacing:.18em;
+  /* ══ 共通パーツ ════════════════════════ */
+  h2{font-family:var(--mincho); font-size:15.5px; font-weight:600; letter-spacing:.08em;
+    margin:24px 0 11px; padding-bottom:6px; border-bottom:1px solid var(--rule);
+    display:flex; align-items:baseline; gap:9px}
+  h2 small{font-family:var(--mono); font-size:9.5px; letter-spacing:.18em;
     color:var(--ink2); font-weight:400}
 
-  /* ── 位置 ── */
-  .geo{border:1px solid var(--rule); background:var(--white); padding:14px}
-  .plan{width:100%; height:auto; display:block; background:#FBFBF9;
-    border:1px solid var(--rule2)}
-  .coord{display:grid; grid-template-columns:1fr 1fr; gap:1px; margin-top:12px;
-    background:var(--rule2); border:1px solid var(--rule2)}
-  .coord div{background:var(--white); padding:9px 11px}
-  .coord span{display:block; font-size:10.5px; color:var(--ink2); letter-spacing:.1em; margin-bottom:2px}
-  .coord b{font-family:var(--mono); font-size:14px; font-weight:600; letter-spacing:.01em}
-  .coord .wide{grid-column:1 / -1}
-  .maplink{display:block; margin-top:10px; text-align:center; font-size:13px;
-    color:var(--green); text-decoration:none; border:1px solid #A8C4B4;
-    background:var(--green2); padding:10px; font-weight:600}
-  .maplink[hidden]{display:none}
-
-  /* ── 操作 ── */
-  .box{border:1px solid var(--rule); background:var(--white); padding:14px}
-  .box + .box{margin-top:10px}
-
   .btn{display:block; width:100%; border:1px solid var(--rule); background:var(--paper);
-    color:var(--ink); font-family:var(--gothic); font-size:15px; font-weight:600;
-    padding:13px; cursor:pointer; border-radius:2px}
+    color:var(--ink); font-size:15px; font-weight:600; padding:13px; cursor:pointer;
+    border-radius:9px; transition:transform .12s ease}
+  .btn:active{transform:scale(.985)}
   .btn:focus-visible{outline:2px solid var(--green); outline-offset:2px}
-  @media(hover:hover){.btn:hover:not(:disabled){background:var(--tint)}}
-  .btn:disabled{opacity:.42; cursor:not-allowed}
-  .btn.main{background:var(--green); border-color:var(--green); color:#fff}
-  @media(hover:hover){.btn.main:hover:not(:disabled){background:#17452F}}
-  .btn.armed{background:#8A6410; border-color:#8A6410; color:#fff}
+  .btn:disabled{opacity:.4; cursor:not-allowed}
+  .btn.main{background:var(--green); border-color:var(--green); color:var(--onGreen)}
+  .btn.armed{background:var(--amber); border-color:var(--amber); color:#fff}
+  .btn.ghost{background:transparent; border-color:transparent; color:var(--ink2); font-weight:400; font-size:13.5px}
   .btn + .btn{margin-top:8px}
 
   .msg{margin-top:11px; font-size:13px; line-height:1.7; color:var(--ink2);
     border-left:3px solid var(--rule); padding:1px 0 1px 11px; word-break:break-word}
-  .msg.ok{color:#17452F; border-color:var(--green)}
-  .msg.err{color:#8C2E22; border-color:var(--seal)}
-  .msg.busy{color:#6E5210; border-color:var(--amber)}
+  .msg.ok{color:var(--ok); border-color:var(--green)}
+  .msg.err{color:var(--err); border-color:var(--seal)}
+  .msg.busy{color:var(--amber); border-color:var(--amber)}
 
-  /* ── 入力 ── */
+  .box{border:1px solid var(--rule); background:var(--white); border-radius:12px; padding:14px}
+  .box + .box{margin-top:10px}
+  .note{margin-top:13px; font-size:12.5px; color:var(--ink2); line-height:1.75}
+  .note b{color:var(--ink)}
+  code{font-family:var(--mono); font-size:12px; background:var(--tint);
+    padding:1px 5px; border-radius:3px}
+
+  /* ══ 台帳カード ════════════════════════ */
+  .rec{border:1px solid var(--rule); background:var(--white); border-radius:12px;
+    overflow:hidden; margin-top:16px}
+  .rec .cap{font-family:var(--mono); font-size:10px; letter-spacing:.2em; color:var(--ink2);
+    background:var(--tint); padding:7px 13px; border-bottom:1px solid var(--rule);
+    display:flex; justify-content:space-between; align-items:center}
+  .seal{font-family:var(--mincho); font-size:11px; color:var(--seal);
+    border:1.5px solid var(--seal); border-radius:3px; padding:1px 6px; letter-spacing:.1em}
+  dl.rows{margin:0}
+  dl.rows > div{display:grid; grid-template-columns:98px 1fr; border-bottom:1px solid var(--rule2)}
+  dl.rows > div:last-child{border-bottom:0}
+  dl.rows dt{margin:0; padding:11px 13px; font-size:12.5px; color:var(--ink2);
+    background:var(--tint); border-right:1px solid var(--rule2); letter-spacing:.05em}
+  dl.rows dd{margin:0; padding:11px 13px; font-size:15px; min-height:22px; word-break:break-all}
+  dl.rows dd.empty::after{content:"—"; color:var(--rule)}
+
+  /* ══ 位置 ══════════════════════════════ */
+  .plan{width:100%; height:auto; display:block; background:var(--plan);
+    border:1px solid var(--rule2); border-radius:8px}
+  .coord{display:grid; grid-template-columns:1fr 1fr; gap:1px; margin-top:12px;
+    background:var(--rule2); border:1px solid var(--rule2); border-radius:8px; overflow:hidden}
+  .coord div{background:var(--white); padding:9px 11px}
+  .coord span{display:block; font-size:10px; color:var(--ink2); letter-spacing:.1em; margin-bottom:2px}
+  .coord b{font-family:var(--mono); font-size:14px; font-weight:600}
+  .coord .wide{grid-column:1 / -1}
+  .maplink{display:block; margin-top:10px; text-align:center; font-size:13px;
+    color:var(--green); text-decoration:none; border:1px solid var(--greenLine);
+    background:var(--green2); padding:11px; font-weight:600; border-radius:9px}
+  .maplink[hidden]{display:none}
+
+  /* ══ 権限 ══════════════════════════════ */
+  .role{display:grid; grid-template-columns:repeat(2,1fr); border:1px solid var(--rule);
+    background:var(--white); border-radius:12px 12px 0 0; overflow:hidden}
+  .role button{border:0; background:transparent; color:var(--ink2); font-size:12.5px;
+    font-weight:600; padding:11px 4px; cursor:pointer;
+    border-top:1px solid var(--rule2); border-left:1px solid var(--rule2)}
+  .role button:nth-child(-n+2){border-top:0}
+  .role button:nth-child(odd){border-left:0}
+  .role button[aria-pressed="true"]{background:var(--green); color:var(--onGreen)}
+  .gate{border:1px solid var(--rule); border-top:0; background:var(--white);
+    border-radius:0 0 12px 12px; padding:13px 14px}
+  .gate .lead{font-size:12.5px; color:var(--ink2); margin:0 0 12px; line-height:1.7}
+  .tally{display:flex; justify-content:space-between; align-items:baseline;
+    font-size:11.5px; color:var(--ink2); margin-bottom:6px}
+  .tally b{font-family:var(--mono); font-size:14px; color:var(--green)}
+  .tbar{height:6px; border:1px solid var(--rule2); background:var(--paper);
+    border-radius:4px; overflow:hidden; margin-bottom:6px}
+  .tbar i{display:block; height:100%; background:var(--green); transition:width .35s ease}
+  .item{display:flex; gap:11px; align-items:flex-start; padding:12px 0;
+    border-top:1px solid var(--rule2); text-decoration:none; color:inherit}
+  .item .k{flex:0 0 18px; width:18px; margin-top:2px}
+  .item .b{flex:1; min-width:0}
+  .item .t{font-size:14.5px; font-weight:600; display:block}
+  .item .d{font-size:12px; color:var(--ink2); line-height:1.6; margin-top:2px; display:block}
+  .item .go{flex:0 0 auto; align-self:center; font-family:var(--mono); font-size:10.5px;
+    color:var(--green); border:1px solid var(--greenLine); background:var(--green2);
+    padding:5px 9px; border-radius:6px; white-space:nowrap}
+  .item .gos{flex:0 0 auto; align-self:center; display:flex; flex-direction:column; gap:5px}
+  a.go{text-decoration:none; display:block; text-align:center}
+  .item.off{opacity:.4}
+  .item.off .go{color:var(--ink2); border-color:var(--rule2); background:var(--tint)}
+  .sim{margin-top:12px; padding:9px 11px; border:1px dashed var(--seal); border-radius:8px;
+    color:var(--err); font-size:11.5px; line-height:1.6}
+
+  /* ══ 入力・容量 ════════════════════════ */
   .fields{display:grid; gap:11px}
-  label{display:block; font-size:11.5px; color:var(--ink2); letter-spacing:.08em; margin-bottom:4px}
-  input{width:100%; background:var(--white); border:1px solid var(--rule);
-    border-radius:2px; color:var(--ink); font-family:var(--gothic); font-size:16px;
-    padding:11px 12px}
+  label{display:block; font-size:11.5px; color:var(--ink2); letter-spacing:.06em; margin-bottom:4px}
+  input{width:100%; background:var(--paper); border:1px solid var(--rule); border-radius:8px;
+    color:var(--ink); font-family:var(--gothic); font-size:16px; padding:11px 12px}
   input:focus{outline:none; border-color:var(--green); box-shadow:inset 0 0 0 1px var(--green)}
-  input::placeholder{color:#A9B0A8}
+  input::placeholder{color:var(--ink2); opacity:.55}
 
-  /* ── 容量計 ── */
-  .cap-meter{margin-top:16px}
-  .cap-meter .h{display:flex; justify-content:space-between; align-items:baseline;
-    font-size:11.5px; color:var(--ink2); letter-spacing:.06em; margin-bottom:6px}
-  .cap-meter .h b{font-family:var(--mono); font-size:12.5px; color:var(--ink)}
-  .bar{height:16px; border:1px solid var(--rule); background:var(--paper); display:flex; overflow:hidden}
+  .meter{margin-top:16px}
+  .meter .h{display:flex; justify-content:space-between; align-items:baseline;
+    font-size:11.5px; color:var(--ink2); margin-bottom:6px}
+  .meter .h b{font-family:var(--mono); font-size:12.5px; color:var(--ink)}
+  .bar{height:15px; border:1px solid var(--rule); background:var(--paper);
+    display:flex; overflow:hidden; border-radius:5px}
   .bar i{display:block; height:100%; transition:width .3s ease}
   .bar .u{background:var(--green)}
-  .bar .t{background:#7E9A5C}
+  .bar .t{background:var(--amber)}
   .key{display:flex; gap:14px; margin-top:7px; font-size:10.5px; color:var(--ink2)}
   .key span{display:inline-flex; align-items:center; gap:5px}
-  .key i{width:9px; height:9px; display:block}
+  .key i{width:9px; height:9px; display:block; border-radius:2px}
 
-  /* ── レコード一覧 ── */
   table.raw{width:100%; border-collapse:collapse; margin-top:12px; font-size:12px}
-  table.raw th{text-align:left; font-family:var(--mono); font-size:10px; letter-spacing:.14em;
+  table.raw th{text-align:left; font-family:var(--mono); font-size:9.5px; letter-spacing:.14em;
     color:var(--ink2); font-weight:400; padding:6px 8px; background:var(--tint);
     border:1px solid var(--rule2)}
   table.raw td{padding:8px; border:1px solid var(--rule2); vertical-align:top; word-break:break-all}
-  table.raw td.n{font-family:var(--mono); color:var(--ink2); text-align:center; width:26px}
-  table.raw td.b{font-family:var(--mono); color:var(--ink2); text-align:right; width:52px}
-  table.raw .ty{font-family:var(--mono); font-size:11.5px; color:var(--green)}
-  table.raw .bd{color:var(--ink2); font-size:11.5px; margin-top:3px}
+  table.raw td.n{font-family:var(--mono); color:var(--ink2); text-align:center; width:24px}
+  table.raw td.b{font-family:var(--mono); color:var(--ink2); text-align:right; width:48px}
+  table.raw .ty{font-family:var(--mono); font-size:11px; color:var(--green)}
+  table.raw .bd{color:var(--ink2); font-size:11px; margin-top:3px}
   .uid{margin-top:10px; font-size:12.5px; color:var(--ink2); line-height:1.7}
   .uid b{color:var(--ink)}
 
-  .note{margin-top:14px; font-size:12.5px; color:var(--ink2); line-height:1.75}
-  .note b{color:var(--ink)}
-  code{font-family:var(--mono); font-size:12px; background:var(--tint);
-    padding:1px 5px; border:1px solid var(--rule2)}
+  .mode{display:flex; border:1px solid var(--rule); background:var(--white);
+    border-radius:9px; overflow:hidden}
+  .mode button{flex:1; border:0; background:transparent; color:var(--ink2);
+    font-size:13px; font-weight:600; padding:11px 6px; cursor:pointer}
+  .mode button + button{border-left:1px solid var(--rule2)}
+  .mode button[aria-pressed="true"]{background:var(--green); color:var(--onGreen)}
+
+  .share{text-align:center}
+  .share .qr{display:inline-block; background:#fff; padding:11px; border-radius:10px;
+    border:1px solid var(--rule); line-height:0; min-width:166px; min-height:166px}
+  .share .qr img, .share .qr canvas{display:block}
+  .share .u{font-family:var(--mono); font-size:10.5px; color:var(--ink2);
+    word-break:break-all; margin:11px 0 0; line-height:1.6; text-align:left}
 
   .callout{border:1px solid var(--rule); border-left:4px solid var(--green);
-    background:var(--white); padding:13px 14px; font-size:13px; line-height:1.75; margin-top:18px}
+    background:var(--white); border-radius:8px; padding:13px 14px;
+    font-size:13px; line-height:1.75; margin-top:18px}
   .callout b{display:block; margin-bottom:3px}
 
-  footer{margin-top:32px; padding-top:16px; border-top:1px solid var(--rule);
-    font-size:12px; color:var(--ink2); text-align:center; line-height:1.9}
+  /* ══ 折りたたみヘッダ ══════════════════ */
+  .appbar{cursor:pointer}
+  .appbar .sub{font-size:11.5px; opacity:.82; margin-top:2px; line-height:1.4}
+  .appbar .chev{margin-left:auto; flex:0 0 auto; transition:transform .2s ease; opacity:.8}
+  .appbar .chev svg{width:20px; height:20px; display:block}
+  .appbar.open .chev{transform:rotate(180deg)}
+  .drawer{background:var(--white); border-bottom:1px solid var(--rule);
+    position:sticky; top:0; z-index:19}
+  .drawer[hidden]{display:none}
+
+  /* ══ 認証バー ══════════════════════════ */
+  .authbar{position:sticky; top:0; z-index:18; display:flex; align-items:center; gap:10px;
+    background:var(--white); border-bottom:1px solid var(--rule); padding:9px 14px}
+  .authbar .who{flex:1; min-width:0; font-size:12.5px; line-height:1.35}
+  .authbar .who b{display:block; font-size:13.5px}
+  .authbar .who span{color:var(--ink2); font-size:11.5px}
+  .authbar .dot{flex:0 0 9px; width:9px; height:9px; border-radius:50%; background:var(--ink2); opacity:.4}
+  .authbar.on .dot{background:var(--green); opacity:1; box-shadow:0 0 0 3px var(--green2)}
+  .authbar button{flex:0 0 auto; border:1px solid var(--rule); background:var(--paper);
+    color:var(--ink); font-size:12.5px; font-weight:600; padding:7px 13px;
+    border-radius:7px; cursor:pointer}
+  .authbar.on button{border-color:var(--greenLine); background:var(--green2); color:var(--green)}
+
+  /* ══ ログイン ══════════════════════════ */
+  .sheet{position:fixed; inset:0; z-index:45; background:var(--shell);
+    padding:24px 20px calc(24px + env(safe-area-inset-bottom)); overflow-y:auto}
+  .sheet[hidden]{display:none}
+  .sheet h2{margin-top:calc(8px + env(safe-area-inset-top))}
+  .acct{display:flex; align-items:center; gap:13px; width:100%; text-align:left;
+    border:1px solid var(--rule); background:var(--white); border-radius:12px;
+    padding:15px 14px; margin-bottom:9px; cursor:pointer; color:inherit}
+  .acct:active{transform:scale(.99)}
+  .acct .av{flex:0 0 40px; width:40px; height:40px; border-radius:50%; background:var(--green2);
+    color:var(--green); display:grid; place-items:center; font-size:13px; font-weight:700}
+  .acct .tx{flex:1; min-width:0}
+  .acct .tx b{display:block; font-size:15px}
+  .acct .tx span{font-size:11.5px; color:var(--ink2)}
+  .acct .lv{font-family:var(--mono); font-size:10px; color:var(--green);
+    border:1px solid var(--greenLine); background:var(--green2); padding:3px 7px; border-radius:5px}
+  .acct[aria-current="true"]{border-color:var(--green); box-shadow:inset 0 0 0 1px var(--green)}
+
+  /* ══ 履歴 ══════════════════════════════ */
+  .hcard{border:1px solid var(--rule); background:var(--white); border-radius:12px;
+    padding:14px; margin-top:10px}
+  .hhead{display:flex; align-items:center; gap:9px; flex-wrap:wrap}
+  .kind{font-size:12px; font-weight:600; padding:3px 10px; border-radius:5px; color:#fff}
+  .kind.C{background:var(--seal)} .kind.I{background:var(--green)} .kind.R{background:var(--amber)}
+  .kind.I{color:var(--onGreen)}
+  .hdate{font-family:var(--mono); font-size:14px; font-weight:600}
+  .horg{font-size:12.5px; color:var(--ink2)}
+  .hflag{margin-left:auto; font-family:var(--mono); font-size:9.5px; letter-spacing:.06em;
+    padding:3px 7px; border-radius:4px; white-space:nowrap}
+  .hflag.cloud{color:var(--green); border:1px solid var(--greenLine); background:var(--green2)}
+  .hflag.local{color:#fff; background:var(--amber)}
+  .hnote{font-size:13px; margin:10px 0 0; line-height:1.7}
+  .hchg{margin:9px 0 0; padding:9px 11px; background:var(--tint); border-radius:7px}
+  .hchg div{font-size:12px; color:var(--ink2); line-height:1.7; padding-left:14px; position:relative}
+  .hchg div::before{content:"›"; position:absolute; left:2px; color:var(--green); font-weight:700}
+  .hdocs{display:flex; flex-wrap:wrap; gap:7px; margin-top:11px}
+  .hdocs a{font-family:var(--mono); font-size:11px; text-decoration:none; color:var(--green);
+    border:1px solid var(--greenLine); background:var(--green2); padding:6px 10px; border-radius:6px}
+  .hdocs .lockdoc{font-family:var(--mono); font-size:11px; color:var(--ink2);
+    border:1px solid var(--rule2); background:var(--tint); padding:6px 10px; border-radius:6px; opacity:.6}
+
+  .locked{border:1px solid var(--rule); border-radius:12px; background:var(--white);
+    padding:34px 20px; text-align:center; margin-top:14px}
+  .locked svg{width:40px; height:40px; color:var(--ink2); opacity:.45; margin-bottom:10px}
+  .locked p{margin:0; font-size:13.5px; color:var(--ink2); line-height:1.8}
+  .locked b{display:block; color:var(--ink); font-size:15px; margin-bottom:5px}
+
+  .tagh{border:1px solid var(--rule); background:var(--white); border-radius:12px;
+    padding:13px 14px; margin-top:16px}
+  .tagh .th{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:9px}
+  .tagh .th b{font-size:14px}
+  .tagh .th span{font-family:var(--mono); font-size:11.5px; color:var(--green)}
+  .tagh ol{margin:0; padding:0; list-style:none}
+  .tagh li{display:flex; align-items:center; gap:8px; font-family:var(--mono); font-size:12px;
+    padding:7px 0; border-top:1px solid var(--rule2)}
+  .tagh li:first-child{border-top:0}
+  .tagh li .kk{font-size:10.5px; padding:2px 7px; border-radius:4px; color:#fff}
+  .tagh li .kk.C{background:var(--seal)} .tagh li .kk.I{background:var(--green); color:var(--onGreen)}
+  .tagh li .kk.R{background:var(--amber)}
+  .tagh li .cd{color:var(--ink2)}
+  .tagh li{cursor:pointer}
+  .tagh li.plain{cursor:default}
+  .tagh li .arw{margin-left:auto; color:var(--green); font-size:12px}
+  .tagh li:active:not(.plain){background:var(--tint)}
+  .hcard.hit{border-color:var(--green); box-shadow:0 0 0 2px var(--green2)}
+  @keyframes flash{0%{background:var(--green2)}100%{background:var(--white)}}
+  .hcard.hit{animation:flash 1.4s ease-out}
+  .appbar.nochev .chev{visibility:hidden}
+  .appbar.nochev{cursor:default}
+  .tagh .empty{font-size:12.5px; color:var(--ink2)}
+
+  /* ══ スキャンFAB ═══════════════════════ */
+  .fab{
+    position:fixed; right:16px; z-index:25;
+    bottom:calc(var(--bar) + 16px + env(safe-area-inset-bottom));
+    display:flex; align-items:center; gap:8px;
+    background:var(--green); color:var(--onGreen); border:0; border-radius:999px;
+    padding:13px 20px 13px 16px; font-size:14.5px; font-weight:600; cursor:pointer;
+    box-shadow:0 4px 16px rgba(0,0,0,.28); transition:transform .12s ease;
+  }
+  .fab:active{transform:scale(.96)}
+  .fab svg{width:21px; height:21px}
+  .fab[hidden]{display:none}
+
+  .sbClose{position:absolute; top:calc(14px + env(safe-area-inset-top)); right:14px;
+    border:1px solid var(--rule); background:var(--white); color:var(--ink2);
+    width:40px; height:40px; border-radius:50%; font-size:19px; cursor:pointer; line-height:1}
+  .sbClose[hidden]{display:none}
+
+  .browserWarn{margin-top:14px; border:1px solid var(--amber); border-radius:9px;
+    background:var(--white); padding:12px 13px; font-size:12.5px; color:var(--ink2); line-height:1.7}
+  .browserWarn[hidden]{display:none}
+  .browserWarn a{display:block; margin-top:9px; text-align:center; text-decoration:none;
+    background:var(--amber); color:#fff; font-weight:600; padding:10px; border-radius:8px}
+
+  /* ══ トースト ══════════════════════════ */
+  .toast{position:fixed; left:50%; bottom:calc(var(--bar) + 18px + env(safe-area-inset-bottom));
+    z-index:50; transform:translate(-50%,14px); opacity:0; pointer-events:none;
+    background:var(--ink); color:var(--shell); font-size:13.5px; font-weight:600;
+    padding:11px 18px; border-radius:999px; max-width:88vw; text-align:center;
+    transition:opacity .2s ease, transform .2s ease}
+  .toast.show{opacity:1; transform:translate(-50%,0)}
+  .toast.err{background:var(--seal); color:#fff}
+
+  footer{margin-top:28px; padding-top:15px; border-top:1px solid var(--rule);
+    font-size:11.5px; color:var(--ink2); text-align:center; line-height:1.9}
   footer a{color:var(--green)}
 </style>
 </head>
 <body>
-<div class="sheet">
 
-  <div class="head">
-    <div class="t">
-      <p class="kind">SEWER LATERAL / FIELD RECORD</p>
-      <h1>取付管 現地確認票</h1>
-      <p class="sub">サンプルデータ。実現場の記録ではありません。</p>
+<!-- ══════ 待機画面 ══════ -->
+<div class="standby" id="standby">
+  <div class="brand">SEWER LATERAL / FIELD APP</div>
+  <button class="sbClose" id="sbClose" hidden aria-label="閉じる">×</button>
+  <div class="pulse" id="pulse">
+    <i></i><i></i><i></i>
+    <div class="core">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round">
+        <path d="M6 8.5a5 5 0 0 1 0 7M9.5 6a8.6 8.6 0 0 1 0 12"/>
+        <path d="M18 15.5a5 5 0 0 1 0-7M14.5 18a8.6 8.6 0 0 1 0-12"/>
+      </svg>
     </div>
-    <div class="seal">見本</div>
   </div>
-
-  <div class="mode" role="group" aria-label="表示モード">
-    <button type="button" id="modeOff" aria-pressed="false">位置情報なし</button>
-    <button type="button" id="modeOn"  aria-pressed="false">位置情報あり</button>
-  </div>
-  <p class="mode-note" id="modeNote"></p>
-
-  <div class="rec">
-    <div class="cap">台帳記載事項</div>
-    <div class="no">
-      <div class="lbl">取付管ID<span class="tagmark">タグ記録・不変</span></div>
-      <div class="val blank" id="pid">未取得</div>
-      <div class="origin" id="origin"><i></i><span id="originText">情報源なし</span></div>
+  <h1>NFCタグをかざしてください</h1>
+  <p id="sbNote">端末の背面をタグに近づけると、取付管の情報が表示されます。</p>
+  <div class="acts">
+    <button class="btn main" id="sbScan">読み取りを開始</button>
+    <button class="btn ghost" id="sbDemo">タグを使わずデモデータで開く</button>
+    <div class="browserWarn" id="browserWarn" hidden>
+      このブラウザは NFC の読み書きに対応していません。<br>
+      Chrome で開き直すと、タグの読み取りと書き込みができます。
+      <a id="chromeLink" href="#">Chrome で開く</a>
     </div>
-    <dl class="rows" id="rows"></dl>
   </div>
-
-  <div id="geoBlock">
-  <h2>位置 <small>GPS</small></h2>
-  <div class="geo">
-    <svg class="plan" id="plan" viewBox="0 0 300 150" role="img" aria-label="推定位置と誤差範囲"></svg>
-    <div class="coord">
-      <div><span>緯度</span><b id="cLat">—</b></div>
-      <div><span>経度</span><b id="cLng">—</b></div>
-      <div class="wide"><span>誤差半径（参考値）</span><b id="cAcc">—</b></div>
-    </div>
-    <a class="maplink" id="mapLink" href="#" target="_blank" rel="noopener" hidden>地図で開く（通信が必要）</a>
-  </div>
-  </div>
-
-  <h2>閲覧できる情報 <small>ACCESS</small></h2>
-  <div class="role" id="roleBtns"></div>
-  <div class="gate">
-    <p class="lead" id="roleLead"></p>
-    <div class="tally"><span>閲覧できる項目</span><span><b id="tallyN">0</b> / <span id="tallyT">0</span></span></div>
-    <div class="tbar"><i id="tallyBar" style="width:0%"></i></div>
-    <div id="roleItems"></div>
-    <p class="sim">デモ用の疑似切替です。実装時はここに認証が入り、施錠された項目はクラウド側で遮断されます。</p>
-  </div>
-
-  <h2>タグを読み取る <small>READ</small></h2>
-  <div class="box">
-    <button class="btn main" id="scanBtn">読み取りを開始</button>
-    <button class="btn" id="stopBtn" disabled>読み取りを停止</button>
-    <div class="msg" id="scanMsg">端末を確認しています…</div>
-    <div id="rawWrap"></div>
-  </div>
-
-  <div id="measBlock">
-  <h2>現在地を測る <small>GEOLOCATION</small></h2>
-  <div class="box">
-    <button class="btn" id="geoBtn">現在地を取得（30秒）</button>
-    <button class="btn" id="geoStop" disabled>この値で確定</button>
-    <div class="msg" id="geoMsg">屋外で静止したまま押してください。時間が経つほど誤差が縮みます。</div>
-    <p class="note">
-      屋内では誤差が数十メートルから縮まないことがあります。その場合は下の
-      <b>緯度・経度を直接入力</b>してください（地図アプリで現地を長押しすると座標が出ます）。<br>
-      端末を8の字に振るのは<b>方位センサーの校正</b>で、位置の精度には影響しません。
-      効くのは「静止して待つ」「空が開けた場所に立つ」「通信をONにする」の3つです。
-    </p>
-  </div>
-  </div>
-
-  <h2>タグに書き込む <small>WRITE</small></h2>
-  <div class="box">
-    <div class="fields" id="pidForm"></div>
-    <p class="note" style="margin:8px 0 14px">
-      取付管IDは<b>販売時に1回だけ登録</b>する不変情報です。本番ではNTAG216のパスワード保護（AUTH0）で書き込みを封じます。
-    </p>
-    <div class="fields" id="form"></div>
-    <div class="fields" id="geoForm" style="margin-top:11px"></div>
-
-    <div class="cap-meter">
-      <div class="h"><span>NTAG216 メモリ使用量</span><b id="bytes">0 / 888 バイト</b></div>
-      <div class="bar"><i class="u" id="barU" style="width:0%"></i><i class="t" id="barT" style="width:0%"></i></div>
-      <div class="key">
-        <span><i style="background:#1F5B41"></i>URLレコード</span>
-        <span><i style="background:#7E9A5C"></i>テキストレコード</span>
-      </div>
-    </div>
-
-    <button class="btn main" id="writeBtn" style="margin-top:16px">タグに書き込む</button>
-    <button class="btn" id="cancelBtn" disabled>書き込みを中止</button>
-    <div class="msg" id="writeMsg">入力してから書き込んでください。</div>
-    <p class="note">
-      URLレコードとテキストレコードを<b>1回の操作で同時に</b>書き換えます。
-      内容がずれることはありません。
-    </p>
-  </div>
-
-  <div class="callout" id="offlineTip">
-    <b>機内モードで試してください</b>
-    このページを開いたあとに機内モードをONにしても、読み取り・書き込み・座標の表示は動作します。
-    情報がタグ自体に記録されている証拠になります（地図の表示だけは通信が必要です）。
-  </div>
-
-  <footer>
-    取付管ライフサイクル情報プラットフォーム ／ NFC操作デモ<br>
-    <a href="index.html">詳細ページへ</a>　<a href="../../index.html">現場一覧へ</a>
-  </footer>
-
 </div>
 
+<!-- ══════ アプリ ══════ -->
+<div class="app" id="app" hidden>
+
+  <header class="appbar" id="appbar" role="button" tabindex="0" aria-expanded="false">
+    <div style="min-width:0">
+      <div class="lbl">取付管ID</div>
+      <div class="idv" id="abId">—</div>
+      <div class="sub" id="abSub">—</div>
+    </div>
+    <div class="src" id="abSrc">未取得</div>
+    <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span>
+  </header>
+  <div class="authbar" id="authbar">
+    <span class="dot"></span>
+    <div class="who"><b id="authName">未認証</b><span id="authLv">公開情報のみ閲覧できます</span></div>
+    <button type="button" id="authBtn">ログイン</button>
+  </div>
+  <div class="drawer" id="drawer" hidden>
+    <dl class="rows" id="rowsTop"></dl>
+  </div>
+
+  <main>
+
+    <!-- ── 現場 ── -->
+    <section class="tab" data-tab="site">
+      <div class="rec">
+        <div class="cap"><span>台帳記載事項</span><span class="seal">見本</span></div>
+        <dl class="rows" id="rows"></dl>
+      </div>
+
+      <div class="tagh" id="tagh">
+        <div class="th"><b>タグに記録された更新履歴</b><span id="taghN">—</span></div>
+        <ol id="taghList"></ol>
+        <p class="note" style="margin-top:11px">
+          タグが持つのは<b>日付・種別・実施者コード</b>だけです。
+          所見や図面はクラウドにあり、「履歴」タブで参照します。
+        </p>
+      </div>
+
+      <div id="geoBlock">
+        <h2>位置 <small>GPS</small></h2>
+        <div class="box">
+          <svg class="plan" id="plan" viewBox="0 0 300 150" role="img" aria-label="推定位置と誤差範囲"></svg>
+          <div class="coord">
+            <div><span>緯度</span><b id="cLat">—</b></div>
+            <div><span>経度</span><b id="cLng">—</b></div>
+            <div class="wide"><span>誤差半径（参考値）</span><b id="cAcc">—</b></div>
+          </div>
+          <a class="maplink" id="mapLink" href="#" target="_blank" rel="noopener" hidden>地図で開く（通信が必要）</a>
+        </div>
+      </div>
+
+      <div class="callout">
+        <b>機内モードで試してください</b>
+        このアプリを開いたあとに機内モードをONにしても、読み取り・書き込み・座標の表示は動作します。
+        情報がタグ自体に記録されている証拠になります（地図の表示だけは通信が必要です）。
+      </div>
+    </section>
+
+    <!-- ── 履歴 ── -->
+    <section class="tab" data-tab="hist" hidden>
+      <h2>更新履歴 <small>TIMELINE</small></h2>
+      <div id="histWrap"></div>
+      <button class="btn" id="syncBtn" hidden style="margin-top:12px">クラウドへ同期する</button>
+      <p class="note" id="histNote"></p>
+    </section>
+
+    <!-- ── 情報 ── -->
+    <section class="tab" data-tab="info" hidden>
+      <h2>閲覧できる情報 <small>ACCESS</small></h2>
+      <div class="gate" style="border-radius:12px; border-top:1px solid var(--rule)">
+        <p class="lead" id="roleLead"></p>
+        <div class="tally"><span>閲覧できる項目</span><span><b id="tallyN">0</b> / <span id="tallyT">0</span></span></div>
+        <div class="tbar"><i id="tallyBar" style="width:0%"></i></div>
+        <div id="roleItems"></div>
+        <p class="sim">実装ではこの一覧は独立した画面になり、施錠された項目はクラウド側で遮断されます。
+        権限は人ではなく案件と期間に紐づけて自治体が付与する運用を想定しています。</p>
+      </div>
+    </section>
+
+    <!-- ── 記録 ── -->
+    <section class="tab" data-tab="rec" hidden>
+      <h2>タグを読み取る <small>READ</small></h2>
+      <div class="box">
+        <button class="btn main" id="scanBtn">読み取りを開始</button>
+        <button class="btn" id="stopBtn" disabled>読み取りを停止</button>
+        <div class="msg" id="scanMsg">端末を確認しています…</div>
+        <div id="rawWrap"></div>
+      </div>
+
+      <div id="measBlock">
+        <h2>現在地を測る <small>GEOLOCATION</small></h2>
+        <div class="box">
+          <button class="btn" id="geoBtn">現在地を取得（30秒）</button>
+          <button class="btn" id="geoStop" disabled>この値で確定</button>
+          <div class="msg" id="geoMsg">屋外で静止したまま押してください。時間が経つほど誤差が縮みます。</div>
+          <p class="note">
+            屋内では誤差が数十メートルから縮まないことがあります。その場合は下の
+            <b>緯度・経度を直接入力</b>してください。<br>
+            端末を8の字に振るのは<b>方位センサーの校正</b>で、位置の精度には影響しません。
+          </p>
+        </div>
+      </div>
+
+      <h2>タグに書き込む <small>WRITE</small></h2>
+      <div class="box">
+        <div class="fields" id="pidForm"></div>
+        <p class="note" style="margin:8px 0 14px">
+          取付管IDは<b>販売時に1回だけ登録</b>する不変情報です。本番ではNTAG216のパスワード保護（AUTH0）で書き込みを封じます。
+        </p>
+        <div class="fields" id="form"></div>
+        <div class="fields" id="geoForm" style="margin-top:11px"></div>
+        <div class="fields" id="evForm" style="margin-top:11px"></div>
+
+        <div class="meter">
+          <div class="h"><span>NTAG216 メモリ使用量</span><b id="bytes">0 / 888 バイト</b></div>
+          <div class="bar"><i class="u" id="barU" style="width:0%"></i><i class="t" id="barT" style="width:0%"></i></div>
+          <div class="key">
+            <span><i style="background:var(--green)"></i>URLレコード</span>
+            <span><i style="background:var(--amber)"></i>テキストレコード</span>
+          </div>
+        </div>
+
+        <button class="btn main" id="writeBtn" style="margin-top:16px">タグに書き込む</button>
+        <button class="btn" id="cancelBtn" disabled>書き込みを中止</button>
+        <div class="msg" id="writeMsg">入力してから書き込んでください。</div>
+      </div>
+
+      <h2>この画面を共有する <small>SHARE</small></h2>
+      <div class="box share">
+        <div class="qr" id="qrbox"></div>
+        <p class="u" id="qrurl">—</p>
+        <button class="btn" id="qrBtn" style="margin-top:11px">QRを今の内容で更新</button>
+        <p class="note" style="text-align:left">
+          NFC非搭載の端末や iPhone でも、このQRをカメラで読めば<b>同じ画面が開きます</b>。
+          タグをかざせない相手にはこちらを見せてください。
+        </p>
+      </div>
+
+      <h2>デモ設定 <small>DEMO</small></h2>
+      <div class="box">
+        <div class="mode" role="group" aria-label="位置情報の扱い">
+          <button type="button" id="modeOff" aria-pressed="false">位置情報なし</button>
+          <button type="button" id="modeOn"  aria-pressed="false">位置情報あり</button>
+        </div>
+        <p class="note" id="modeNote"></p>
+        <button class="btn" id="installBtn" hidden style="margin-top:12px">ホーム画面に追加する</button>
+        <button class="btn ghost" id="resetBtn" style="margin-top:8px">待機画面に戻る</button>
+      </div>
+
+      <footer>
+        取付管ライフサイクル情報プラットフォーム ／ NFC操作デモ<br>
+        <a href="index.html">従来の詳細ページへ</a>　<a href="../../index.html">現場一覧へ</a>
+      </footer>
+    </section>
+
+  </main>
+
+  <button class="fab" id="fab" type="button" hidden>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+      <path d="M6 8.5a5 5 0 0 1 0 7M9.5 6a8.6 8.6 0 0 1 0 12"/>
+      <path d="M18 15.5a5 5 0 0 1 0-7M14.5 18a8.6 8.6 0 0 1 0-12"/>
+    </svg>
+    タグを読み取る
+  </button>
+
+  <nav class="tabbar" id="tabbar">
+    <button type="button" data-go="site" aria-current="page">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>
+      台帳
+    </button>
+    <button type="button" data-go="hist" aria-current="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.2 12a8.8 8.8 0 1 0 2.6-6.2"/><path d="M3 4v4.5h4.5"/><path d="M12 7.5V12l3 1.8"/></svg>
+      履歴
+    </button>
+    <button type="button" data-go="info" aria-current="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
+      情報
+    </button>
+    <button type="button" data-go="rec" aria-current="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8.5a5 5 0 0 1 0 7M9.5 6a8.6 8.6 0 0 1 0 12"/><path d="M18 15.5a5 5 0 0 1 0-7M14.5 18a8.6 8.6 0 0 1 0-12"/></svg>
+      記録
+    </button>
+  </nav>
+</div>
+
+<div class="sheet" id="login" hidden>
+  <h2>アカウント <small>SIGN IN</small></h2>
+  <p class="note" style="margin:0 0 16px">
+    アプリ利用者はログインした権限に応じて記録を閲覧できます。
+    <b>デモのためパスワードは不要</b>です。
+  </p>
+  <div id="acctList"></div>
+  <button class="btn ghost" id="logoutBtn" style="margin-top:6px">ログアウトして公開情報のみにする</button>
+  <button class="btn" id="loginClose" style="margin-top:14px">閉じる</button>
+  <p class="note">
+    ホーム画面に追加したアプリから起動すると、<b>自動的にログイン済み</b>として扱われます。
+    ブラウザで開いた場合は未認証です。実装では初回ログイン後にセッションを保持し、
+    タグを読むたびに認証を求めることはありません。
+  </p>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="../../vendor/qrcode.min.js"></script>
 <script>
 (function(){
   "use strict";
 
-  var CAPACITY = 888;   // NTAG216 ユーザーメモリ
-  var SCHEMA   = 1;
-  var GEO_MS   = 30000; // 測位を続ける時間
+  var CAPACITY = 888, SCHEMA = 1, GEO_MS = 30000;
 
   var PID = { key:"pid", label:"取付管ID", ph:"23222-0006-000001", type:"text" };
   var FIELDS = [
@@ -342,53 +634,64 @@
     { key:"date", label:"最終点検日",   ph:"",                type:"date" },
     { key:"org",  label:"最終点検業者", ph:"○○管路工業",     type:"text" }
   ];
-
-  var ROLES = [
-    { key:"public", label:"誰でも",
-      lead:"タグをかざした全員が見られる範囲です。現物の同定と、最終点検がいつ誰によって行われたかまで。" },
-    { key:"city", label:"自治体",
-      lead:"基礎管理情報として全ての記録を閲覧できます。補修履歴と材料情報は自治体のみです。" },
-    { key:"maint", label:"維持管理業者",
-      lead:"調査データとして、点検履歴と配管経路の記録一式を閲覧できます。" },
-    { key:"renew", label:"改築業者",
-      lead:"工事準備として配管経路を参照し、現地では施工支援ツールを利用できます。" }
-  ];
-
-  var ALL = ["public","city","maint","renew"];
-  var ITEMS = [
-    { t:"台帳記載事項", d:"取付管ID・取付管番号・現場名・現場住所・最終点検日・最終点検業者",
-      roles:ALL, at:"この画面の上部" },
-    { t:"位置情報", d:"座標と誤差半径（GPS登録値）",
-      roles:ALL, at:"この画面の上部" },
-    { t:"点検履歴", d:"2024-06-12 異状なし ／ 2026-08-19 軽微な浸入水（管口部）",
-      roles:["city","maint"] },
-    { t:"配管情報（配管経路）", d:"マッピング解析による配管経路・土工量・改築部材（PDF）",
-      roles:["city","maint","renew"], link:"report.pdf" },
-    { t:"配管情報（AR表示）", d:"埋設位置の重畳表示と掘削領域の検討（3D図面ビューアも同画面から）",
-      roles:["city","renew"], link:"https://kanisg26.github.io/AR-hyouji-26-test5/" },
-    { t:"配管映像", d:"管内映像サンプル。軽量版は約0.9MB、フル版は約3.0MB",
-      roles:["city","maint"],
-      links:[ { t:"軽量版", h:"video.mp4" }, { t:"フル版", h:"video_demo.mp4" } ] },
-    { t:"コメント写真集", d:"特記事項ごとの記録（写真欄）",
-      roles:["city","maint"], link:"photos.html" },
-    { t:"補修履歴・材料情報", d:"2025-02-03 部分ライニング 延長 2.4m ／ 硬質塩化ビニル管 φ150",
-      roles:["city","maint","renew"] }
-  ];
-
   var GEO_FIELDS = [
-    { key:"lat", label:"緯度",             ph:"34.693738" },
-    { key:"lng", label:"経度",             ph:"135.502165" },
-    { key:"acc", label:"誤差半径（m）",     ph:"8" }
+    { key:"lat", label:"緯度",         ph:"34.693738" },
+    { key:"lng", label:"経度",         ph:"135.502165" },
+    { key:"acc", label:"誤差半径（m）", ph:"8" }
   ];
   var GEO_KEYS = ["lat","lng","acc"];
   var geoMode = false;
 
+  var DEMO = {
+    pid:"23222-0006-000001", no:"TP-2026-000123", site:"第1工区", addr:"A棟前",
+    date:"2026-08-19", org:"○○管路工業", lat:"34.693738", lng:"135.502165", acc:"8",
+    n:"4", h:"260819IOKR.250203RSKN.240612IOKR.230314CMRT"
+  };
+
+  var ROLES = [
+    { key:"public", label:"誰でも",
+      lead:"台帳記載事項と位置情報は権限なしで画面上部に常時表示されます。記録の閲覧には権限が必要です。" },
+    { key:"city", label:"自治体",
+      lead:"基礎管理情報として全ての記録を閲覧できます。" },
+    { key:"maint", label:"維持管理業者",
+      lead:"調査データとして、点検履歴と配管経路の記録一式を閲覧できます。" },
+    { key:"renew", label:"改築業者",
+      lead:"工事準備として配管経路と補修履歴を参照し、現地では施工支援ツールを利用できます。" }
+  ];
+
+  var ALL = ["public","city","maint","renew"];
+  var SHOW_ITEM_DESC = false;        // true にすると各項目の補足説明が復活します
+  var HIST_MAX_ON_TAG = 4;           // タグに載せる履歴の件数
+  var KINDS = { C:{ label:"工事" }, I:{ label:"点検" }, R:{ label:"補修" } };
+  var EV_FIELDS = [
+    { key:"evKind", label:"更新の種別", type:"select",
+      opts:[ { v:"I", t:"点検" }, { v:"R", t:"補修" }, { v:"C", t:"工事" } ] },
+    { key:"evOrg",  label:"実施者コード（3文字）", ph:"OKR", type:"text" }
+  ];
+  var cloudHist = [];   // history.json 由来
+  var localHist = [];   // この端末で書き込んだぶん（未同期）
+  var ORGS = {};
+  var ITEMS = [
+    { t:"点検記録", d:"直近2回の点検所見",
+      roles:["city","maint"] },
+    { t:"配管情報（配管経路）", d:"マッピング解析による配管経路・土工量・改築部材（PDF）",
+      roles:["city","maint","renew"], link:"report.pdf" },
+    { t:"配管情報（AR表示）", d:"埋設位置の重畳表示と掘削領域の検討",
+      roles:["city","renew"], link:"https://kanisg26.github.io/AR-hyouji-26-test5/" },
+    { t:"配管映像", d:"管内映像サンプル",
+      roles:["city","maint"],
+      links:[ { t:"軽量版", h:"video.mp4" }, { t:"フル版", h:"video_demo.mp4" } ] },
+    { t:"コメント写真集", d:"特記事項ごとの記録",
+      roles:["city","maint"], link:"photos.html" },
+    { t:"補修履歴・材料情報", d:"補修の内容と使用材料",
+      roles:["city","maint","renew"] }
+  ];
+
   var $ = function(id){ return document.getElementById(id); };
   var enc = new TextEncoder(), dec = new TextDecoder();
-
   var scanCtl = null, writeCtl = null;
-  // 座標は入力欄が正データ（geoオブジェクトは廃止）
-  var watchId = null, geoTimer = null, geoEnd = null, geoBest = null, geoStart = 0;
+  var watchId = null, geoEnd = null, geoBest = null, geoStart = 0;
+  var installEvt = null;
 
   function esc(s){
     return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){
@@ -397,17 +700,94 @@
   }
   function clip(s,n){ s = String(s||""); return s.length > n ? s.slice(0,n) + "…" : s; }
   function say(id, text, cls){
-    var e = $(id); e.textContent = text; e.className = "msg" + (cls ? " " + cls : "");
+    var e = $(id); if (!e) return;
+    e.textContent = text; e.className = "msg" + (cls ? " " + cls : "");
+  }
+  function isDark(){
+    return !!(window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  }
+  function buzz(p){ try { if (navigator.vibrate) navigator.vibrate(p); } catch(e){} }
+
+  var toastTimer = null;
+  function toast(msg, kind){
+    var t = $("toast");
+    t.textContent = msg;
+    t.className = "toast show" + (kind === "err" ? " err" : "");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ t.className = "toast" + (kind === "err" ? " err" : ""); }, 2600);
   }
 
-  /* ───── 表示 ───── */
+  /* ══ 画面遷移 ══════════════════════════ */
+
+  function go(tab){
+    // 台帳タブは同じ内容を持つので、ヘッダの展開を封じて重複を避ける
+    var onSite = (tab === "site");
+    $("appbar").classList.toggle("nochev", onSite);
+    if (onSite) {
+      $("drawer").hidden = true;
+      $("appbar").classList.remove("open");
+      $("appbar").setAttribute("aria-expanded", "false");
+    }
+
+    var secs = document.querySelectorAll(".tab");
+    for (var i = 0; i < secs.length; i++) secs[i].hidden = (secs[i].dataset.tab !== tab);
+    var btns = $("tabbar").querySelectorAll("button");
+    for (var j = 0; j < btns.length; j++) {
+      btns[j].setAttribute("aria-current", btns[j].dataset.go === tab ? "page" : "false");
+    }
+    if (tab === "rec") makeQR();
+    window.scrollTo(0, 0);
+  }
+
+  var hasData = false;
+
+  function enterApp(state, origin){
+    hasData = true;
+    $("standby").hidden = true;
+    $("app").hidden = false;
+    $("fab").hidden = false;
+    fillForm(state);
+    render(state, origin);
+    if (state.pid) loadHistory(state.pid);
+    if (!$("app").dataset.entered) { go("site"); $("app").dataset.entered = "1"; }
+  }
+
+  // アプリ内から全画面スキャナを開く（初見の人にも読み取り体験を届ける）
+  function openScanner(){
+    $("sbClose").hidden = !hasData;
+    $("standby").hidden = false;
+    $("fab").hidden = true;
+    $("sbNote").textContent = "端末の背面をタグに近づけてください。読み取ると内容が更新されます。";
+    startScan(true);
+  }
+
+  function closeScanner(){
+    stopScan();
+    $("standby").hidden = true;
+    $("fab").hidden = false;
+  }
+
+  function backToStandby(){
+    stopScan();
+    hasData = false;
+    delete $("app").dataset.entered;
+    $("app").hidden = true;
+    $("fab").hidden = true;
+    $("sbClose").hidden = true;
+    $("standby").hidden = false;
+    $("sbNote").textContent = "端末の背面をタグに近づけると、取付管の情報が表示されます。";
+  }
+
+  /* ══ 構築 ══════════════════════════════ */
 
   function buildRows(){
-    var dl = $("rows"); dl.innerHTML = "";
-    FIELDS.forEach(function(f){
-      var d = document.createElement("div");
-      d.innerHTML = '<dt>' + f.label + '</dt><dd class="empty" data-k="' + f.key + '"></dd>';
-      dl.appendChild(d);
+    ["rows","rowsTop"].forEach(function(id){
+      var dl = $(id); dl.innerHTML = "";
+      FIELDS.forEach(function(f){
+        var d = document.createElement("div");
+        d.innerHTML = '<dt>' + f.label + '</dt><dd class="empty" data-k="' + f.key + '"></dd>';
+        dl.appendChild(d);
+      });
     });
   }
 
@@ -424,10 +804,39 @@
   }
 
   function buildForm(){
-    $("pidForm").innerHTML = "";
-    $("form").innerHTML = "";
+    $("pidForm").innerHTML = ""; $("form").innerHTML = "";
     makeInput(PID, "pidForm");
     FIELDS.forEach(function(f){ makeInput(f, "form"); });
+  }
+
+  function buildEvForm(){
+    var box = $("evForm"); box.innerHTML = "";
+    EV_FIELDS.forEach(function(f){
+      var w = document.createElement("div");
+      var lb = document.createElement("label");
+      lb.setAttribute("for", "f_" + f.key); lb.textContent = f.label;
+      var el;
+      if (f.type === "select") {
+        el = document.createElement("select");
+        el.style.cssText = "width:100%;background:var(--paper);border:1px solid var(--rule);" +
+          "border-radius:8px;color:var(--ink);font-family:inherit;font-size:16px;padding:11px 12px";
+        f.opts.forEach(function(o){
+          var op = document.createElement("option");
+          op.value = o.v; op.textContent = o.t; el.appendChild(op);
+        });
+      } else {
+        el = document.createElement("input");
+        el.type = "text"; el.maxLength = 3;
+        el.style.textTransform = "uppercase";
+        if (f.ph) el.placeholder = f.ph;
+      }
+      el.id = "f_" + f.key;
+      el.addEventListener("input", updateMeter);
+      el.addEventListener("change", updateMeter);
+      w.appendChild(lb); w.appendChild(el);
+      box.appendChild(w);
+    });
+    $("f_evOrg").value = "OKR";
   }
 
   function buildGeoForm(){
@@ -457,37 +866,234 @@
     updateMeter();
   }
 
-  function buildRoles(){
-    var box = $("roleBtns"); box.innerHTML = "";
-    ROLES.forEach(function(r){
-      var btn = document.createElement("button");
-      btn.type = "button"; btn.textContent = r.label;
-      btn.setAttribute("aria-pressed", r.key === "public" ? "true" : "false");
-      btn.addEventListener("click", function(){ setRole(r.key); });
-      box.appendChild(btn);
+  var LOCK_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" style="opacity:.55"><rect x="4" y="10.5" width="16" height="10.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>';
+  var LOCK_ON  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" style="color:var(--green)"><rect x="4" y="10.5" width="16" height="10.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 7.8-1.2"/></svg>';
+
+  var tagState = {};
+
+  /* ══ 履歴 ══════════════════════════════ */
+
+  function orgName(code){ return ORGS[code] || code || "—"; }
+  function kindLabel(k){ return (KINDS[k] && KINDS[k].label) || k || "—"; }
+
+  // "260819IOKR" → { date:"2026-08-19", kind:"I", org:"OKR" }
+  function decodeEntry(t){
+    if (!t || t.length < 10) return null;
+    return {
+      date: "20" + t.slice(0,2) + "-" + t.slice(2,4) + "-" + t.slice(4,6),
+      kind: t.charAt(6),
+      org:  t.slice(7,10)
+    };
+  }
+  function encodeEntry(date, kind, org){
+    var d = String(date || "").replace(/-/g, "");
+    return d.slice(2,8) + kind + (org || "___").slice(0,3).toUpperCase();
+  }
+  function decodeHist(h){
+    if (!h) return [];
+    return String(h).split(".").map(decodeEntry).filter(Boolean);
+  }
+
+  // 台帳タブ：タグが持っている履歴サマリ
+  function renderTagHist(state){
+    var list = decodeHist(state.h);
+    $("taghN").textContent = state.n ? "通算 " + state.n + " 回" : "記録なし";
+    if (!list.length) {
+      $("taghList").innerHTML = '<li class="empty">このタグには更新履歴が記録されていません。</li>';
+      return;
+    }
+    $("taghList").innerHTML = list.map(function(e, i){
+      var nm = ORGS[e.org];
+      return '<li data-date="' + e.date + '" data-kind="' + e.kind + '">' +
+             '<span class="kk ' + e.kind + '">' + kindLabel(e.kind) + '</span>' +
+             '<span>' + e.date + '</span>' +
+             '<span class="cd">' + esc(nm || e.org) + '</span>' +
+             '<span class="arw">' + (i === 0 ? '最新 ›' : '›') + '</span></li>';
+    }).join("");
+
+    var lis = $("taghList").querySelectorAll("li[data-date]");
+    for (var k = 0; k < lis.length; k++) {
+      (function(li){
+        li.addEventListener("click", function(){ openHistoryEntry(li.dataset.date, li.dataset.kind); });
+      })(lis[k]);
+    }
+  }
+
+  var LOCK_BIG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="4" y="10.5" width="16" height="10.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>';
+
+  function renderHistory(){
+    var wrap = $("histWrap");
+    if (!wrap) return;
+
+    if (currentRole === "public") {
+      wrap.innerHTML = '<div class="locked">' + LOCK_BIG +
+        '<p><b>閲覧には権限が必要です</b>' +
+        '更新履歴は自治体・維持管理業者・改築業者のみが参照できます。' +
+        '「情報」タブで閲覧者を切り替えてください。</p></div>';
+      $("syncBtn").hidden = true;
+      $("histNote").textContent = "";
+      return;
+    }
+
+    var all = localHist.concat(cloudHist);
+    if (!all.length) {
+      wrap.innerHTML = '<div class="locked">' + LOCK_BIG +
+        '<p><b>履歴を取得できませんでした</b>クラウドに接続できないか、この取付管IDの記録がありません。</p></div>';
+      $("syncBtn").hidden = true;
+      return;
+    }
+
+    wrap.innerHTML = all.map(function(e){
+      var docs = (e.docs || []).map(function(d){
+        var ok = !d.roles || d.roles.indexOf(currentRole) !== -1;
+        return ok
+          ? '<a href="' + d.h + '" target="_blank" rel="noopener">' + esc(d.t) + ' →</a>'
+          : '<span class="lockdoc">' + esc(d.t) + '（非公開）</span>';
+      }).join("");
+
+      var chg = (e.changes || []).length
+        ? '<div class="hchg">' + e.changes.map(function(c){ return '<div>' + esc(c) + '</div>'; }).join("") + '</div>'
+        : "";
+
+      return '<div class="hcard" data-date="' + e.date + '" data-kind="' + e.kind + '">' +
+        '<div class="hhead">' +
+          '<span class="kind ' + e.kind + '">' + kindLabel(e.kind) + '</span>' +
+          '<span class="hdate">' + esc(e.date) + '</span>' +
+          '<span class="horg">' + esc(orgName(e.org)) + '</span>' +
+          '<span class="hflag ' + (e.local ? "local" : "cloud") + '">' +
+            (e.local ? "未同期" : "クラウド") + '</span>' +
+        '</div>' +
+        (e.note ? '<p class="hnote">' + esc(e.note) + '</p>' : "") +
+        chg +
+        (docs ? '<div class="hdocs">' + docs + '</div>' : "") +
+      '</div>';
+    }).join("");
+
+    var pend = localHist.length;
+    $("syncBtn").hidden = pend === 0;
+    $("syncBtn").textContent = "クラウドへ同期する（" + pend + "件）";
+    $("histNote").textContent = pend
+      ? "この端末で書き込んだ " + pend + " 件がまだクラウドに送られていません。通信が回復したら同期します。"
+      : "すべてクラウドと同期済みです。デモでは同期を疑似的に表現しています。";
+  }
+
+  // タグ内履歴の1行から、クラウド側の該当カードへ移動する
+  function openHistoryEntry(date, kind){
+    if (!authed) {
+      toast("履歴の詳細は認証が必要です", "err");
+      $("login").hidden = false;
+      return;
+    }
+    go("hist");
+    buzz(12);
+    setTimeout(function(){
+      var cards = $("histWrap").querySelectorAll(".hcard");
+      var hit = null;
+      for (var i = 0; i < cards.length; i++) {
+        cards[i].classList.remove("hit");
+        if (cards[i].dataset.date === date && cards[i].dataset.kind === kind) hit = cards[i];
+      }
+      if (hit) {
+        hit.classList.add("hit");
+        if (hit.scrollIntoView) hit.scrollIntoView({ block:"center", behavior:"smooth" });
+      } else {
+        toast("この更新の詳細はクラウドにありません", "err");
+      }
+    }, 60);
+  }
+
+  function loadHistory(pid){
+    if (!pid) { cloudHist = []; renderHistory(); return; }
+    fetch("history.json", { cache:"no-cache" }).then(function(r){
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    }).then(function(j){
+      ORGS = j.orgs || {};
+      cloudHist = (j.records && j.records[pid]) || [];
+      renderTagHist(tagState);
+      renderHistory();
+    }).catch(function(e){
+      cloudHist = [];
+      renderHistory();
+      console.warn("[history] 取得失敗:", e.message);
     });
+  }
+
+  function syncHistory(){
+    if (!localHist.length) return;
+    var n = localHist.length;
+    localHist.forEach(function(e){ e.local = false; });
+    cloudHist = localHist.concat(cloudHist);
+    localHist = [];
+    renderHistory();
+    toast(n + "件をクラウドへ同期しました");
+    buzz([30, 50, 30]);
+  }
+
+  function isStandalone(){
+    return (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches)
+        || window.navigator.standalone === true;
+  }
+
+  function buildAccounts(){
+    var box = $("acctList"); box.innerHTML = "";
+    ACCOUNTS.forEach(function(a){
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "acct";
+      b.innerHTML = '<span class="av">' + esc(a.short.slice(0,2)) + '</span>' +
+                    '<span class="tx"><b>' + esc(a.name) + '</b><span>' + esc(a.short) + '</span></span>' +
+                    '<span class="lv">' + esc(a.lv) + '</span>';
+      b.addEventListener("click", function(){
+        signIn(a.role);
+        $("login").hidden = true;
+        toast(a.name + " でログインしました");
+        buzz([30, 50, 30]);
+      });
+      box.appendChild(b);
+    });
+  }
+
+  function signIn(role){
+    var a = null;
+    ACCOUNTS.forEach(function(x){ if (x.role === role) a = x; });
+    authed = !!a;
+    $("authName").textContent = authed ? a.name : "未認証";
+    $("authLv").textContent   = authed ? a.short + "として閲覧中" : "公開情報のみ閲覧できます";
+    $("authBtn").textContent  = authed ? "切替" : "ログイン";
+    $("authbar").classList.toggle("on", authed);
+
+    var btns = $("acctList").querySelectorAll(".acct");
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].setAttribute("aria-current", ACCOUNTS[i].role === role ? "true" : "false");
+    }
+    setRole(authed ? role : "public");
+    updateWriteGate();
+  }
+
+  function updateWriteGate(){
+    var sp = support();
+    var blocked = !authed;
+    $("writeBtn").disabled = blocked || !sp.ok;
+    if (blocked) say("writeMsg", "タグへの書き込みには認証が必要です。上部の「ログイン」から権限を選んでください。", "err");
+    else if (sp.ok) say("writeMsg", "入力してから書き込んでください。", "");
+  }
+
+  function buildRoles(){
     $("tallyT").textContent = ITEMS.length;
     setRole("public");
   }
 
-  var LOCK_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="#9AA39B" stroke-width="1.9" stroke-linecap="round"><rect x="4" y="10.5" width="16" height="10.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>';
-  var LOCK_ON  = '<svg viewBox="0 0 24 24" fill="none" stroke="#1F5B41" stroke-width="1.9" stroke-linecap="round"><rect x="4" y="10.5" width="16" height="10.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 7.8-1.2"/></svg>';
-
   function setRole(key){
     var role = null;
-    ROLES.forEach(function(r, i){
-      var on = r.key === key;
-      $("roleBtns").children[i].setAttribute("aria-pressed", on ? "true" : "false");
-      if (on) role = r;
-    });
+    ROLES.forEach(function(r){ if (r.key === key) role = r; });
     if (!role) return;
-
     $("roleLead").textContent = role.lead;
 
     var html = "", n = 0;
     ITEMS.forEach(function(it){
       var open = it.roles.indexOf(key) !== -1;
       if (open) n++;
+
       var tail;
       if (!open)         tail = '<span class="go">非公開</span>';
       else if (it.soon)  tail = '<span class="go">準備中</span>';
@@ -498,9 +1104,12 @@
       else if (it.link)  tail = '<span class="go">開く →</span>';
       else if (it.at)    tail = '<span class="go">表示中</span>';
       else               tail = '<span class="go">閲覧可</span>';
+
       var body = '<span class="k">' + (open ? LOCK_ON : LOCK_OFF) + '</span>' +
                  '<span class="b"><span class="t">' + esc(it.t) + '</span>' +
-                 '<span class="d">' + esc(it.at || it.d) + '</span></span>' + tail;
+                 (SHOW_ITEM_DESC ? '<span class="d">' + esc(it.at || it.d) + '</span>' : '') +
+                 '</span>' + tail;
+
       html += (open && it.link && !it.soon)
         ? '<a class="item" href="' + it.link + '" target="_blank" rel="noopener">' + body + '</a>'
         : '<div class="item' + (open ? '' : ' off') + '">' + body + '</div>';
@@ -509,27 +1118,40 @@
     $("roleItems").innerHTML = html;
     $("tallyN").textContent = n;
     $("tallyBar").style.width = (n / ITEMS.length * 100) + "%";
+    currentRole = key;
+    renderHistory();
   }
+
+  var currentRole = "public";
+  var ACCOUNTS = [
+    { role:"city",  name:"○○市 下水道課",   short:"自治体",       lv:"全情報" },
+    { role:"maint", name:"○○管路工業",      short:"維持管理業者", lv:"調査データ" },
+    { role:"renew", name:"□□工業",          short:"改築業者",     lv:"施工支援" }
+  ];
+  var authed = false;
+
+  /* ══ 表示 ══════════════════════════════ */
 
   function render(state, origin){
     var pid = state.pid && String(state.pid).trim();
-    var v = $("pid");
-    v.textContent = pid || "未取得";
-    v.className = "val" + (pid ? "" : " blank");
+    $("abId").textContent = pid || "—";
+    $("abSrc").textContent =
+      origin === "tag" ? "タグから読取" :
+      origin === "url" ? "タグのURL"   :
+      origin === "demo" ? "デモデータ"  : "未取得";
 
     FIELDS.forEach(function(f){
-      var dd = document.querySelector('#rows dd[data-k="' + f.key + '"]');
-      if (!dd) return;
       var x = state[f.key] && String(state[f.key]).trim();
-      dd.textContent = x || "";
-      dd.className = x ? "" : "empty";
+      var dds = document.querySelectorAll('dd[data-k="' + f.key + '"]');
+      for (var i = 0; i < dds.length; i++) {
+        dds[i].textContent = x || "";
+        dds[i].className = x ? "" : "empty";
+      }
     });
-
-    var o = $("origin");
-    o.className = "origin" + (origin ? " " + origin : "");
-    $("originText").textContent =
-      origin === "tag" ? "タグから直接読み取り" :
-      origin === "url" ? "タグのURLから表示"   : "情報源なし";
+    $("abSub").textContent =
+      [state.site, state.date ? "最終点検 " + state.date : null].filter(Boolean).join(" ／ ") || "—";
+    tagState = state;
+    renderTagHist(state);
 
     if (state.lat && state.lng) {
       showGeo(parseFloat(state.lat), parseFloat(state.lng), state.acc ? parseFloat(state.acc) : null);
@@ -548,67 +1170,64 @@
     updateMeter();
   }
 
-  /* ───── 位置の作図 ───── */
+  /* ══ 位置の作図 ════════════════════════ */
 
   function niceStep(m){
     var steps = [1,2,5,10,20,50,100,200,500];
-    for (var i=0;i<steps.length;i++) if (steps[i] >= m) return steps[i];
+    for (var i = 0; i < steps.length; i++) if (steps[i] >= m) return steps[i];
     return 1000;
   }
 
   function drawPlan(acc){
-    var svg = $("plan");
-    var W = 300, H = 150, cx = 150, cy = 72;
+    var dark = isDark();
+    var C = {
+      grid: dark ? "#232B27" : "#E4E7DF",
+      green: dark ? "#5FBF92" : "#1F5B41",
+      seal: dark ? "#E0806F" : "#B0392A",
+      ink2: dark ? "#95A19A" : "#5C655F",
+      dim:  dark ? "#3B443F" : "#9AA39B"
+    };
+    var svg = $("plan"), W = 300, H = 150, cx = 150, cy = 72;
 
     var g = '<defs><pattern id="grid" width="15" height="15" patternUnits="userSpaceOnUse">' +
-            '<path d="M15 0H0V15" fill="none" stroke="#E4E7DF" stroke-width="1"/></pattern></defs>' +
+            '<path d="M15 0H0V15" fill="none" stroke="' + C.grid + '" stroke-width="1"/></pattern></defs>' +
             '<rect width="' + W + '" height="' + H + '" fill="url(#grid)"/>';
 
     if (!acc || !isFinite(acc) || acc <= 0) {
       g += '<text x="' + cx + '" y="' + (cy + 5) + '" text-anchor="middle" ' +
-           'font-family="sans-serif" font-size="12" fill="#9AA39B">位置は未取得です</text>';
+           'font-family="sans-serif" font-size="12" fill="' + C.dim + '">位置は未取得です</text>';
       svg.innerHTML = g;
       return;
     }
 
-    var rPx = 46;                 // 誤差円の描画半径は固定
-    var mpp = acc / rPx;          // メートル / ピクセル
+    var rPx = 46, mpp = acc / rPx;
 
-    // 誤差円
-    g += '<circle cx="' + cx + '" cy="' + cy + '" r="' + rPx + '" fill="#1F5B41" fill-opacity="0.07" ' +
-         'stroke="#1F5B41" stroke-opacity="0.5" stroke-width="1.2" stroke-dasharray="4 3"/>';
+    g += '<circle cx="' + cx + '" cy="' + cy + '" r="' + rPx + '" fill="' + C.green + '" fill-opacity="0.09" ' +
+         'stroke="' + C.green + '" stroke-opacity="0.55" stroke-width="1.2" stroke-dasharray="4 3"/>';
 
-    // 蓋（直径60cm）の実寸比較
     var lidPx = 0.6 / mpp;
     if (lidPx >= 2.2) {
-      g += '<circle cx="' + cx + '" cy="' + cy + '" r="' + lidPx.toFixed(1) + '" fill="none" stroke="#B0392A" stroke-width="1.2"/>';
-      g += '<line x1="' + (cx + lidPx + 3) + '" y1="' + cy + '" x2="' + (cx + rPx - 6) + '" y2="' + cy + '" stroke="#B0392A" stroke-width="0.8" stroke-dasharray="2 2"/>';
-      g += '<text x="' + (cx + rPx + 4) + '" y="' + (cy + 3.5) + '" font-family="sans-serif" font-size="9" fill="#B0392A">ふた 60cm</text>';
+      g += '<circle cx="' + cx + '" cy="' + cy + '" r="' + lidPx.toFixed(1) + '" fill="none" stroke="' + C.seal + '" stroke-width="1.2"/>';
+      g += '<line x1="' + (cx + lidPx + 3) + '" y1="' + cy + '" x2="' + (cx + rPx - 6) + '" y2="' + cy + '" stroke="' + C.seal + '" stroke-width="0.8" stroke-dasharray="2 2"/>';
+      g += '<text x="' + (cx + rPx + 4) + '" y="' + (cy + 3.5) + '" font-family="sans-serif" font-size="9" fill="' + C.seal + '">ふた 60cm</text>';
     }
 
-    // 推定点
-    g += '<line x1="' + (cx-7) + '" y1="' + cy + '" x2="' + (cx+7) + '" y2="' + cy + '" stroke="#1F5B41" stroke-width="1.4"/>';
-    g += '<line x1="' + cx + '" y1="' + (cy-7) + '" x2="' + cx + '" y2="' + (cy+7) + '" stroke="#1F5B41" stroke-width="1.4"/>';
-    g += '<circle cx="' + cx + '" cy="' + cy + '" r="2.6" fill="#1F5B41"/>';
-
-    // 誤差の注記
+    g += '<line x1="' + (cx-7) + '" y1="' + cy + '" x2="' + (cx+7) + '" y2="' + cy + '" stroke="' + C.green + '" stroke-width="1.4"/>';
+    g += '<line x1="' + cx + '" y1="' + (cy-7) + '" x2="' + cx + '" y2="' + (cy+7) + '" stroke="' + C.green + '" stroke-width="1.4"/>';
+    g += '<circle cx="' + cx + '" cy="' + cy + '" r="2.6" fill="' + C.green + '"/>';
     g += '<text x="' + cx + '" y="' + (cy - rPx - 8) + '" text-anchor="middle" ' +
-         'font-family="ui-monospace,monospace" font-size="11" fill="#1F5B41">±' +
+         'font-family="ui-monospace,monospace" font-size="11" fill="' + C.green + '">±' +
          (acc >= 10 ? Math.round(acc) : acc.toFixed(1)) + ' m</text>';
 
-    // スケールバー
-    var step = niceStep(60 * mpp);
-    var barPx = step / mpp;
-    var bx = 16, by = H - 20;
-    g += '<line x1="' + bx + '" y1="' + by + '" x2="' + (bx + barPx) + '" y2="' + by + '" stroke="#5C655F" stroke-width="1.4"/>';
-    g += '<line x1="' + bx + '" y1="' + (by-4) + '" x2="' + bx + '" y2="' + (by+4) + '" stroke="#5C655F" stroke-width="1.4"/>';
-    g += '<line x1="' + (bx+barPx) + '" y1="' + (by-4) + '" x2="' + (bx+barPx) + '" y2="' + (by+4) + '" stroke="#5C655F" stroke-width="1.4"/>';
-    g += '<text x="' + (bx + barPx + 6) + '" y="' + (by + 4) + '" font-family="sans-serif" font-size="10" fill="#5C655F">' + step + ' m</text>';
+    var step = niceStep(60 * mpp), barPx = step / mpp, bx = 16, by = H - 20;
+    g += '<line x1="' + bx + '" y1="' + by + '" x2="' + (bx + barPx) + '" y2="' + by + '" stroke="' + C.ink2 + '" stroke-width="1.4"/>';
+    g += '<line x1="' + bx + '" y1="' + (by-4) + '" x2="' + bx + '" y2="' + (by+4) + '" stroke="' + C.ink2 + '" stroke-width="1.4"/>';
+    g += '<line x1="' + (bx+barPx) + '" y1="' + (by-4) + '" x2="' + (bx+barPx) + '" y2="' + (by+4) + '" stroke="' + C.ink2 + '" stroke-width="1.4"/>';
+    g += '<text x="' + (bx + barPx + 6) + '" y="' + (by + 4) + '" font-family="sans-serif" font-size="10" fill="' + C.ink2 + '">' + step + ' m</text>';
 
     svg.innerHTML = g;
   }
 
-  // 測位結果を入力欄にも反映する
   function setGeo(lat, lng, acc){
     if (!isFinite(lat) || !isFinite(lng)) return;
     $("f_lat").value = lat.toFixed(6);
@@ -618,7 +1237,6 @@
     updateMeter();
   }
 
-  // 表示だけ更新する
   function showGeo(lat, lng, acc){
     if (!isFinite(lat) || !isFinite(lng)) return;
     $("cLat").textContent = lat.toFixed(6);
@@ -630,22 +1248,20 @@
     drawPlan(acc);
   }
 
-  /* ───── 測位 ───── */
+  /* ══ 測位 ══════════════════════════════ */
 
   function startGeo(){
     if (!navigator.geolocation) { say("geoMsg","この端末では位置情報を取得できません。","err"); return; }
     geoBest = null; geoStart = Date.now();
-    $("geoBtn").disabled = true;
-    $("geoBtn").textContent = "測位中";
+    $("geoBtn").disabled = true; $("geoBtn").textContent = "測位中";
     $("geoStop").disabled = false;
     say("geoMsg","測位中… 静止したままお待ちください。","busy");
 
     watchId = navigator.geolocation.watchPosition(function(p){
       if (!geoBest || p.coords.accuracy < geoBest.coords.accuracy) geoBest = p;
       var el = Math.round((Date.now() - geoStart)/1000);
-      say("geoMsg",
-        "測位中 " + el + "秒 ／ 今回 ±" + Math.round(p.coords.accuracy) +
-        " m ／ 最良 ±" + Math.round(geoBest.coords.accuracy) + " m", "busy");
+      say("geoMsg", "測位中 " + el + "秒 ／ 今回 ±" + Math.round(p.coords.accuracy) +
+          " m ／ 最良 ±" + Math.round(geoBest.coords.accuracy) + " m", "busy");
       setGeo(geoBest.coords.latitude, geoBest.coords.longitude, geoBest.coords.accuracy);
     }, function(err){
       finishGeo();
@@ -653,7 +1269,7 @@
             : err.code === 2 ? "位置を特定できませんでした。屋外の空が開けた場所でお試しください。"
             : err.code === 3 ? "時間内に測位できませんでした。もう一度お試しください。"
             : "測位に失敗しました。";
-      say("geoMsg", m, "err");
+      say("geoMsg", m, "err"); toast("測位に失敗しました", "err");
     }, { enableHighAccuracy:true, maximumAge:0, timeout:20000 });
 
     geoEnd = setTimeout(function(){ finishGeo(true); }, GEO_MS);
@@ -662,18 +1278,18 @@
   function finishGeo(auto){
     if (watchId != null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
     if (geoEnd) { clearTimeout(geoEnd); geoEnd = null; }
-    $("geoBtn").disabled = false;
-    $("geoBtn").textContent = "現在地を取得（30秒）";
+    $("geoBtn").disabled = false; $("geoBtn").textContent = "現在地を取得（30秒）";
     $("geoStop").disabled = true;
     if (geoBest) {
       var el = Math.round((Date.now() - geoStart)/1000);
-      say("geoMsg",
-        "確定しました。誤差 ±" + Math.round(geoBest.coords.accuracy) + " m（" + el + "秒間の最良値）。" +
-        (auto ? "" : " 続けたい場合はもう一度取得してください。"), "ok");
+      var a = Math.round(geoBest.coords.accuracy);
+      say("geoMsg", "確定しました。誤差 ±" + a + " m（" + el + "秒間の最良値）。", "ok");
+      toast("測位を確定しました ±" + a + "m");
+      buzz([30, 50, 30]);
     }
   }
 
-  /* ───── データ組み立て ───── */
+  /* ══ データ組み立て ════════════════════ */
 
   function collect(){
     var s = {};
@@ -682,12 +1298,21 @@
       var v = ip ? ip.value.trim() : "";
       if (v) s[f.key] = v;
     });
+    // タグに載せる履歴（日付は最終点検日、無ければ今日）
+    var kind = $("f_evKind") ? $("f_evKind").value : "I";
+    var org  = $("f_evOrg") ? ($("f_evOrg").value || "").toUpperCase() : "";
+    var when = s.date || new Date().toISOString().slice(0,10);
+    var prev = decodeHist(tagState.h);
+    var head = encodeEntry(when, kind, org);
+    var list = [head].concat(prev.map(function(e){ return encodeEntry(e.date, e.kind, e.org); }));
+    s.h = list.slice(0, HIST_MAX_ON_TAG).join(".");
+    s.n = String((parseInt(tagState.n, 10) || prev.length) + 1);
+
     if (geoMode) {
       var la = parseFloat($("f_lat").value), ln = parseFloat($("f_lng").value);
       var ac = parseFloat($("f_acc").value);
       if (isFinite(la) && isFinite(ln)) {
-        s.lat = la.toFixed(6);
-        s.lng = ln.toFixed(6);
+        s.lat = la.toFixed(6); s.lng = ln.toFixed(6);
         if (isFinite(ac)) s.acc = String(Math.round(ac));
       }
     }
@@ -698,6 +1323,8 @@
     var p = new URLSearchParams();
     [PID].concat(FIELDS).forEach(function(f){ if (s[f.key]) p.set(f.key, s[f.key]); });
     GEO_KEYS.forEach(function(k){ if (s[k]) p.set(k, s[k]); });
+    if (s.n) p.set("n", s.n);
+    if (s.h) p.set("h", s.h);
     if (geoMode) p.set("geo", "1");
     var q = p.toString();
     return location.origin + location.pathname + (q ? "?" + q : "");
@@ -707,10 +1334,11 @@
     var o = { v: SCHEMA };
     [PID].concat(FIELDS).forEach(function(f){ if (s[f.key]) o[f.key] = s[f.key]; });
     GEO_KEYS.forEach(function(k){ if (s[k]) o[k] = s[k]; });
+    if (s.n) o.n = s.n;
+    if (s.h) o.h = s.h;
     return JSON.stringify(o);
   }
 
-  // NDEF の概算。URIレコードは "https://" が1バイトに圧縮される。
   function sizeOf(url, text){
     var u = url.replace(/^https:\/\/(www\.)?/,"").replace(/^http:\/\//,"");
     var a = enc.encode(u).length + 1 + 6;
@@ -725,11 +1353,29 @@
     $("barT").style.width = Math.min(100, sz.text / CAPACITY * 100) + "%";
     var b = $("bytes");
     b.textContent = sz.total + " / " + CAPACITY + " バイト";
-    b.style.color = sz.total > CAPACITY ? "#8C2E22" : sz.total > CAPACITY * .8 ? "#6E5210" : "";
+    b.style.color = sz.total > CAPACITY ? "var(--err)" : sz.total > CAPACITY * .8 ? "var(--amber)" : "";
     return sz;
   }
 
-  /* ───── NFC 対応判定 ───── */
+  /* ══ QR共有 ════════════════════════════ */
+
+  function makeQR(){
+    var url = buildUrl(collect());
+    $("qrurl").textContent = url;
+    var box = $("qrbox");
+    box.innerHTML = "";
+    try {
+      new QRCode(box, {
+        text: url, width:144, height:144,
+        colorDark:"#1C221F", colorLight:"#ffffff",
+        correctLevel: QRCode.CorrectLevel.M
+      });
+    } catch(e) {
+      box.textContent = "QRを生成できません";
+    }
+  }
+
+  /* ══ NFC ═══════════════════════════════ */
 
   function support(){
     if (!("NDEFReader" in window)) {
@@ -755,8 +1401,6 @@
     return "エラーが発生しました：" + (n || "") + " " + (err && err.message ? err.message : "");
   }
 
-  /* ───── 読み取り ───── */
-
   function decodeRecord(r){
     try {
       if (r.recordType === "text") return new TextDecoder(r.encoding || "utf-8").decode(r.data);
@@ -766,7 +1410,6 @@
 
   function parseMessage(message){
     var state = null, rows = [];
-
     for (var i = 0; i < message.records.length; i++) {
       var r = message.records[i];
       var body = (r.recordType === "empty") ? "" : decodeRecord(r);
@@ -780,7 +1423,6 @@
         try { var o = JSON.parse(body); if (o && typeof o === "object") state = o; } catch(e){}
       }
     }
-
     if (!state) {
       for (var j = 0; j < message.records.length; j++) {
         var rec = message.records[j];
@@ -810,9 +1452,13 @@
     $("rawWrap").innerHTML = h;
   }
 
-  function startScan(){
+  function startScan(fromStandby){
     var sp = support();
-    if (!sp.ok) { say("scanMsg", sp.msg, "err"); return; }
+    if (!sp.ok) {
+      say("scanMsg", sp.msg, "err");
+      if (fromStandby) { $("sbNote").textContent = sp.msg; toast("この端末では読み取れません", "err"); }
+      return;
+    }
 
     stopScan();
     scanCtl = new AbortController();
@@ -821,24 +1467,36 @@
     ndef.onreading = function(ev){
       var res = parseMessage(ev.message);
       showRaw(res.rows, ev.serialNumber);
+      buzz([35, 45, 35]);
+
       if (res.state) {
-        render(res.state, "tag");
-        fillForm(res.state);
+        if (res.state.lat && res.state.lng) setMode(true);
+        enterApp(res.state, "tag");
+        $("fab").hidden = false;
         say("scanMsg", "読み取りました。レコード " + res.rows.length + " 件／UID " + (ev.serialNumber || "不明"), "ok");
+        toast("タグを読み取りました");
       } else {
-        say("scanMsg", "読み取りましたが、取付管の情報が入っていません。下の欄を埋めて書き込んでください。", "busy");
+        say("scanMsg", "読み取りましたが、取付管の情報が入っていません。「記録」タブで登録してください。", "busy");
+        toast("空のタグです", "err");
+        enterApp({}, null); go("rec");
       }
     };
     ndef.onreadingerror = function(){
+      buzz(90);
       say("scanMsg", "タグを読み取れませんでした。かざす位置を変えてもう一度お試しください。", "err");
+      toast("読み取れませんでした", "err");
     };
 
     ndef.scan({ signal: scanCtl.signal }).then(function(){
       say("scanMsg", "タグをかざしてください…", "busy");
       $("scanBtn").disabled = true; $("scanBtn").textContent = "読み取り中";
       $("stopBtn").disabled = false;
+      $("pulse").classList.add("live");
+      $("sbScan").disabled = true; $("sbScan").textContent = "かざしてください…";
     }).catch(function(err){
-      say("scanMsg", explain(err), "err"); stopScan();
+      say("scanMsg", explain(err), "err");
+      if (fromStandby) { $("sbNote").textContent = explain(err); toast("読み取りを開始できません", "err"); }
+      stopScan();
     });
   }
 
@@ -846,21 +1504,23 @@
     if (scanCtl) { scanCtl.abort(); scanCtl = null; }
     $("scanBtn").disabled = false; $("scanBtn").textContent = "読み取りを開始";
     $("stopBtn").disabled = true;
+    $("pulse").classList.remove("live");
+    $("sbScan").disabled = false; $("sbScan").textContent = "読み取りを開始";
   }
-
-  /* ───── 書き込み ───── */
 
   function writeTag(){
     var sp = support();
-    if (!sp.ok) { say("writeMsg", sp.msg, "err"); return; }
+    if (!authed) { toast("書き込みには認証が必要です", "err"); $("login").hidden = false; return; }
+    if (!sp.ok) { say("writeMsg", sp.msg, "err"); toast("この端末では書き込めません", "err"); return; }
 
     var s = collect();
-    if (!s.pid) { say("writeMsg", "取付管IDを入力してください。", "err"); return; }
+    if (!s.pid) { say("writeMsg", "取付管IDを入力してください。", "err"); toast("取付管IDが未入力です", "err"); return; }
 
     var sz = updateMeter();
     if (sz.total > CAPACITY) {
       say("writeMsg", "データが " + sz.total + " バイトで、タグの容量 " + CAPACITY +
           " バイトを超えています。現場名や住所を短くしてください。", "err");
+      toast("容量オーバーです", "err");
       return;
     }
 
@@ -883,12 +1543,26 @@
         { recordType:"text", data:text, lang:"ja" }
       ]
     }, { overwrite:true, signal:writeCtl.signal }).then(function(){
+      buzz([40, 60, 40, 60, 40]);
       say("writeMsg", "書き込みました（" + sz.total + " バイト）。もう一度かざすと更新後の内容が表示されます。", "ok");
+      toast("タグに書き込みました");
+
+      var e0 = decodeHist(s.h)[0];
+      if (e0) {
+        localHist.unshift({
+          seq: parseInt(s.n, 10) || 0, date: e0.date, kind: e0.kind, org: e0.org,
+          note: "この端末から書き込みました。", local: true,
+          changes: ["タグの更新回数 " + s.n + " 回目"], docs: []
+        });
+      }
       render(s, "url");
+      renderHistory();
       startScan();
       say("scanMsg", "確認のため、もう一度タグをかざしてください…", "busy");
     }).catch(function(err){
+      buzz(90);
       say("writeMsg", explain(err), "err");
+      toast("書き込めませんでした", "err");
       if (wasScanning) startScan();
     }).then(function(){
       writeCtl = null;
@@ -899,33 +1573,17 @@
     });
   }
 
-  /* ───── 起動 ───── */
+  /* ══ 起動 ══════════════════════════════ */
 
-  buildRows();
-  buildForm();
-  buildGeoForm();
-  buildRoles();
+  buildRows(); buildForm(); buildGeoForm(); buildEvForm(); buildAccounts(); buildRoles();
+
+  // ホーム画面から起動した端末は「ログイン済み」として扱う（デモの簡略化）
+  signIn(isStandalone() ? "city" : null);
 
   var q = Object.fromEntries(new URLSearchParams(location.search));
   var has = [PID].concat(FIELDS, GEO_FIELDS).some(function(f){ return q[f.key]; });
 
-  // タグのURLに geo=1 があるか、座標が入っていれば位置情報ありで開く
   setMode(q.geo === "1" || (!!q.lat && !!q.lng));
-
-  if (has) { fillForm(q); render(q, "url"); }
-  else     { render({}, null); updateMeter(); }
-
-
-  $("scanBtn").addEventListener("click", startScan);
-  $("stopBtn").addEventListener("click", function(){
-    stopScan(); say("scanMsg", "読み取りを停止しました。", "");
-  });
-  $("writeBtn").addEventListener("click", writeTag);
-  $("cancelBtn").addEventListener("click", function(){ if (writeCtl) writeCtl.abort(); });
-  $("geoBtn").addEventListener("click", startGeo);
-  $("geoStop").addEventListener("click", function(){ finishGeo(false); });
-  $("modeOn").addEventListener("click", function(){ setMode(true); });
-  $("modeOff").addEventListener("click", function(){ setMode(false); });
 
   var sp = support();
   if (sp.ok) {
@@ -934,9 +1592,95 @@
     say("scanMsg", sp.msg, "err");
     say("writeMsg", sp.msg, "err");
     $("scanBtn").disabled = true;
-    $("writeBtn").disabled = true;
-    $("offlineTip").style.display = "none";
+    $("sbScan").disabled = true;
+    updateWriteGate();
+    $("sbNote").textContent = sp.msg;
+
+    // Android で Chrome 以外に開かれた場合、Chrome へ渡す導線を出す
+    if (/Android/i.test(navigator.userAgent)) {
+      var bare = location.href.replace(/^https?:\/\//, "");
+      $("chromeLink").href = "intent://" + bare + "#Intent;scheme=https;package=com.android.chrome;end";
+      $("browserWarn").hidden = false;
+    }
   }
+
+  // タグから開かれた場合は待機画面を飛ばす
+  if (has) { enterApp(q, "url"); loadHistory(q.pid); }
+
+  // ── イベント ──
+  var tb = $("tabbar").querySelectorAll("button");
+  for (var i = 0; i < tb.length; i++) {
+    (function(b){ b.addEventListener("click", function(){ go(b.dataset.go); buzz(10); }); })(tb[i]);
+  }
+
+  $("sbScan").addEventListener("click", function(){ startScan(true); });
+  $("sbDemo").addEventListener("click", function(){
+    setMode(true); enterApp(DEMO, "demo"); toast("デモデータを読み込みました"); buzz(20);
+  });
+  $("resetBtn").addEventListener("click", backToStandby);
+  $("fab").addEventListener("click", function(){ openScanner(); buzz(15); });
+  $("syncBtn").addEventListener("click", syncHistory);
+  $("authBtn").addEventListener("click", function(){ $("login").hidden = false; buzz(12); });
+  $("loginClose").addEventListener("click", function(){ $("login").hidden = true; });
+  $("logoutBtn").addEventListener("click", function(){
+    signIn(null); $("login").hidden = true; toast("ログアウトしました"); buzz(20);
+  });
+
+  function toggleDrawer(){
+    if ($("appbar").classList.contains("nochev")) return;
+    var open = $("drawer").hidden;
+    $("drawer").hidden = !open;
+    $("appbar").classList.toggle("open", open);
+    $("appbar").setAttribute("aria-expanded", open ? "true" : "false");
+    buzz(10);
+  }
+  $("appbar").addEventListener("click", toggleDrawer);
+  $("appbar").addEventListener("keydown", function(e){
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleDrawer(); }
+  });
+  $("sbClose").addEventListener("click", closeScanner);
+  $("qrBtn").addEventListener("click", function(){ makeQR(); toast("QRを更新しました"); buzz(12); });
+
+  $("scanBtn").addEventListener("click", function(){ startScan(false); });
+  $("stopBtn").addEventListener("click", function(){
+    stopScan(); say("scanMsg", "読み取りを停止しました。", "");
+  });
+  $("writeBtn").addEventListener("click", writeTag);
+  $("cancelBtn").addEventListener("click", function(){ if (writeCtl) writeCtl.abort(); });
+  $("geoBtn").addEventListener("click", startGeo);
+  $("geoStop").addEventListener("click", function(){ finishGeo(false); });
+  $("modeOn").addEventListener("click", function(){ setMode(true); buzz(10); });
+  $("modeOff").addEventListener("click", function(){ setMode(false); buzz(10); });
+
+  // ダークモード切替に追随
+  if (window.matchMedia) {
+    var mq = window.matchMedia("(prefers-color-scheme: dark)");
+    var onScheme = function(){
+      var a = parseFloat($("f_acc").value);
+      drawPlan(isFinite(a) ? a : null);
+    };
+    if (mq.addEventListener) mq.addEventListener("change", onScheme);
+    else if (mq.addListener) mq.addListener(onScheme);
+  }
+
+  // Service Worker（全画面起動とオフライン動作のため）
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function(){
+      navigator.serviceWorker.register("sw.js").catch(function(e){
+        console.warn("[sw] 登録できませんでした:", e.message);
+      });
+    });
+  }
+
+  // ホーム画面に追加
+  window.addEventListener("beforeinstallprompt", function(e){
+    e.preventDefault(); installEvt = e; $("installBtn").hidden = false;
+  });
+  $("installBtn").addEventListener("click", function(){
+    if (!installEvt) return;
+    installEvt.prompt();
+    installEvt.userChoice.then(function(){ installEvt = null; $("installBtn").hidden = true; });
+  });
 })();
 </script>
 </body>
