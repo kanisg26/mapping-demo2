@@ -338,6 +338,48 @@
   .tagh li .kk.C{background:var(--seal)} .tagh li .kk.I{background:var(--green); color:var(--onGreen)}
   .tagh li .kk.R{background:var(--amber)}
   .tagh li .cd{color:var(--ink2)}
+  /* ══ 回タブ・履歴注記 ══════════════════ */
+  .htabrow{display:flex; align-items:center; gap:8px; padding:9px 12px;
+    background:var(--white); border-bottom:1px solid var(--rule2)}
+  .htabrow .cap2{font-family:var(--mono); font-size:9.5px; letter-spacing:.14em;
+    color:var(--ink2); white-space:nowrap}
+  .htabs{display:flex; gap:5px; flex-wrap:wrap; margin-left:auto}
+  .htabs button{font-family:var(--mono); font-size:10.5px; letter-spacing:.04em;
+    color:var(--ink2); border:1px solid var(--rule); background:var(--paper);
+    border-radius:6px; padding:5px 9px; cursor:pointer}
+  .htabs button[aria-selected="true"]{background:var(--green); border-color:var(--green); color:var(--onGreen)}
+  .htabs .none{font-family:var(--mono); font-size:10px; color:var(--rule)}
+  .histnote{margin:0; padding:10px 13px; font-size:11.5px; line-height:1.7;
+    color:var(--ink2); background:var(--tint); border-top:1px solid var(--rule2)}
+  .histnote[hidden]{display:none}
+  .kbadge{display:inline-block; font-size:10px; font-weight:600; padding:2px 7px;
+    border-radius:4px; margin-left:7px; color:#fff; vertical-align:1px}
+  .kbadge.i{background:var(--green); color:var(--onGreen)}
+  .kbadge.r{background:var(--amber)}
+  .kbadge.c{background:var(--seal)}
+
+  /* ══ 基本情報 / 回の記録 ═══════════════ */
+  .grp{font-family:var(--mono); font-size:10px; letter-spacing:.16em; color:var(--ink2);
+    margin:16px 0 2px; padding-bottom:6px; border-bottom:1px solid var(--rule2)}
+  .grp:first-child{margin-top:0}
+  .grp small{display:block; font-family:var(--gothic); font-size:11px;
+    letter-spacing:0; margin-top:4px; line-height:1.6; opacity:.9}
+  .grp b{font-size:12px; color:var(--ink)}
+  .srcbtn{display:block; margin-top:5px; font-family:var(--mono); font-size:10px;
+    color:var(--green); border:1px solid var(--greenLine); background:var(--green2);
+    border-radius:5px; padding:3px 8px; cursor:pointer}
+
+  /* ══ 書込モード ════════════════════════ */
+  .wmode{display:flex; align-items:flex-start; gap:11px; border:1px solid var(--rule);
+    border-radius:10px; background:var(--paper); padding:12px 13px; margin-bottom:14px}
+  .wmode .tg{flex:0 0 auto; font-family:var(--mono); font-size:9.5px; letter-spacing:.1em;
+    padding:4px 8px; border-radius:5px; background:var(--green); color:var(--onGreen)}
+  .wmode .tg.upd{background:var(--amber); color:#fff}
+  .wmode .tg.unl{background:var(--seal); color:#fff}
+  .wmode .tx{flex:1; font-size:12.5px; line-height:1.7; color:var(--ink2)}
+  .wmode .tx b{color:var(--ink); font-size:13.5px}
+  input:disabled{background:var(--tint); color:var(--ink2); opacity:.75}
+
   .tagh li{cursor:pointer}
   .tagh li.plain{cursor:default}
   .tagh li .arw{margin-left:auto; color:var(--green); font-size:12px}
@@ -442,16 +484,12 @@
     <section class="tab" data-tab="site">
       <div class="rec">
         <div class="cap"><span>台帳記載事項</span><span class="seal">見本</span></div>
+        <div class="htabrow">
+          <span class="cap2">タグ内の更新履歴</span>
+          <div class="htabs" id="histTabs" role="tablist" aria-label="更新履歴"></div>
+        </div>
         <dl class="rows" id="rows"></dl>
-      </div>
-
-      <div class="tagh" id="tagh">
-        <div class="th"><b>タグに記録された更新履歴</b><span id="taghN">—</span></div>
-        <ol id="taghList"></ol>
-        <p class="note" style="margin-top:11px">
-          タグが持つのは<b>日付・種別・実施者コード</b>だけです。
-          所見や図面はクラウドにあり、「履歴」タブで参照します。
-        </p>
+        <p class="histnote" id="histNote" hidden></p>
       </div>
 
       <div id="geoBlock">
@@ -479,7 +517,7 @@
       <h2>更新履歴 <small>TIMELINE</small></h2>
       <div id="histWrap"></div>
       <button class="btn" id="syncBtn" hidden style="margin-top:12px">クラウドへ同期する</button>
-      <p class="note" id="histNote"></p>
+      <p class="note" id="histNote2"></p>
     </section>
 
     <!-- ── 情報 ── -->
@@ -489,6 +527,12 @@
         <p class="lead" id="roleLead"></p>
         <div class="tally"><span>閲覧できる項目</span><span><b id="tallyN">0</b> / <span id="tallyT">0</span></span></div>
         <div class="tbar"><i id="tallyBar" style="width:0%"></i></div>
+
+        <div id="baseWrap">
+          <p class="grp" id="baseCap"></p>
+          <div id="baseItems"></div>
+        </div>
+        <p class="grp" id="recCap"></p>
         <div id="roleItems"></div>
         <p class="sim">実装ではこの一覧は独立した画面になり、施錠された項目はクラウド側で遮断されます。
         権限は人ではなく案件と期間に紐づけて自治体が付与する運用を想定しています。</p>
@@ -521,6 +565,10 @@
 
       <h2>タグに書き込む <small>WRITE</small></h2>
       <div class="box">
+        <div class="wmode">
+          <span class="tg" id="wmodeTag">NEW</span>
+          <span class="tx" id="wmodeText"></span>
+        </div>
         <div class="fields" id="pidForm"></div>
         <p class="note" style="margin:8px 0 14px">
           取付管IDは<b>販売時に1回だけ登録</b>する不変情報です。本番ではNTAG216のパスワード保護（AUTH0）で書き込みを封じます。
@@ -528,6 +576,7 @@
         <div class="fields" id="form"></div>
         <div class="fields" id="geoForm" style="margin-top:11px"></div>
         <div class="fields" id="evForm" style="margin-top:11px"></div>
+        <button class="btn" id="unlockBtn" style="margin-top:12px" hidden>台帳項目を書き換える（自治体のみ）</button>
 
         <div class="meter">
           <div class="h"><span>NTAG216 メモリ使用量</span><b id="bytes">0 / 888 バイト</b></div>
@@ -628,11 +677,11 @@
 
   var PID = { key:"pid", label:"取付管ID", ph:"23222-0006-000001", type:"text" };
   var FIELDS = [
-    { key:"no",   label:"取付管番号",   ph:"TP-2026-000123", type:"text" },
-    { key:"site", label:"現場名",       ph:"第1工区",         type:"text" },
-    { key:"addr", label:"現場住所",     ph:"A棟前",           type:"text" },
-    { key:"date", label:"最終点検日",   ph:"",                type:"date" },
-    { key:"org",  label:"最終点検業者", ph:"○○管路工業",     type:"text" }
+    { key:"no",   label:"取付管番号", ph:"TP-2026-000123", type:"text", lock:true },
+    { key:"site", label:"現場名",     ph:"第1工区",         type:"text", lock:true },
+    { key:"addr", label:"現場住所",   ph:"A棟前",           type:"text", lock:true },
+    { key:"date", label:"更新日",     ph:"",                type:"date" },
+    { key:"org",  label:"更新者",     ph:"○○管路工業",     type:"text" }
   ];
   var GEO_FIELDS = [
     { key:"lat", label:"緯度",         ph:"34.693738" },
@@ -645,14 +694,14 @@
   var DEMO = {
     pid:"23222-0006-000001", no:"TP-2026-000123", site:"第1工区", addr:"A棟前",
     date:"2026-08-19", org:"○○管路工業", lat:"34.693738", lng:"135.502165", acc:"8",
-    n:"4", h:"260819IOKR.250203RSKN.240612IOKR.230314CMRT"
+    k:"I", n:"4", h:"260819IOKR.250203RSKN.240612IOKR.230314CMRT"
   };
 
   var ROLES = [
     { key:"public", label:"誰でも",
-      lead:"台帳記載事項と位置情報は権限なしで画面上部に常時表示されます。記録の閲覧には権限が必要です。" },
+      lead:"台帳記載事項・位置情報・更新履歴は、権限なしで閲覧できます。図面や映像などの資料には権限が必要です。" },
     { key:"city", label:"自治体",
-      lead:"基礎管理情報として全ての記録を閲覧できます。" },
+      lead:"基礎管理情報として全ての記録を閲覧できます。台帳項目の書き換えも自治体のみです。" },
     { key:"maint", label:"維持管理業者",
       lead:"調査データとして、点検履歴と配管経路の記録一式を閲覧できます。" },
     { key:"renew", label:"改築業者",
@@ -662,7 +711,8 @@
   var ALL = ["public","city","maint","renew"];
   var SHOW_ITEM_DESC = false;        // true にすると各項目の補足説明が復活します
   var HIST_MAX_ON_TAG = 4;           // タグに載せる履歴の件数
-  var KINDS = { C:{ label:"工事" }, I:{ label:"点検" }, R:{ label:"補修" } };
+  var KINDS = { I:{ label:"点検", cls:"i" }, R:{ label:"補修", cls:"r" }, C:{ label:"工事", cls:"c" } };
+  var HIST_LABEL = ["最新","前回","2回前","3回前"];
   var EV_FIELDS = [
     { key:"evKind", label:"更新の種別", type:"select",
       opts:[ { v:"I", t:"点検" }, { v:"R", t:"補修" }, { v:"C", t:"工事" } ] },
@@ -670,21 +720,24 @@
   ];
   var cloudHist = [];   // history.json 由来
   var localHist = [];   // この端末で書き込んだぶん（未同期）
-  var ORGS = {};
+  /* 実施業者コードの対照表。本番はクラウド（history.json の orgs）が正で、
+     ここは通信前に表示するための既定値 */
+  var ORGS = { OKR:"○○管路工業", SKN:"△△建設", MRT:"□□工業" };
+  /* base  … 取付管IDに紐づく情報。更新が何回あっても消えない
+     kinds … base では「どの種別の回で更新されるか」、それ以外では「どの回の記録か」
+             I=点検 R=補修 C=工事 */
   var ITEMS = [
-    { t:"点検記録", d:"直近2回の点検所見",
-      roles:["city","maint"] },
     { t:"配管情報（配管経路）", d:"マッピング解析による配管経路・土工量・改築部材（PDF）",
-      roles:["city","maint","renew"], link:"report.pdf" },
+      base:true, kinds:["I","C"], roles:["city","maint","renew"], link:"report.pdf" },
     { t:"配管情報（AR表示）", d:"埋設位置の重畳表示と掘削領域の検討",
-      roles:["city","renew"], link:"https://kanisg26.github.io/AR-hyouji-26-test5/" },
-    { t:"配管映像", d:"管内映像サンプル",
-      roles:["city","maint"],
+      base:true, kinds:["I","C"], roles:["city","renew"], link:"https://kanisg26.github.io/AR-hyouji-26-test5/" },
+    { t:"配管情報（材料）", d:"硬質塩化ビニル管 φ150 ／ 部分ライニング 延長 2.4m",
+      base:true, kinds:["R","C"], roles:["city","maint","renew"] },
+    { t:"配管情報（管内動画）", d:"管内映像サンプル。軽量版は約0.9MB、フル版は約3.0MB",
+      kinds:["I"], roles:["city","maint"],
       links:[ { t:"軽量版", h:"video.mp4" }, { t:"フル版", h:"video_demo.mp4" } ] },
-    { t:"コメント写真集", d:"特記事項ごとの記録",
-      roles:["city","maint"], link:"photos.html" },
-    { t:"補修履歴・材料情報", d:"補修の内容と使用材料",
-      roles:["city","maint","renew"] }
+    { t:"配管情報（管内写真）", d:"特記事項ごとの記録（写真欄）",
+      kinds:["I","R","C"], roles:["city","maint"], link:"photos.html" }
   ];
 
   var $ = function(id){ return document.getElementById(id); };
@@ -870,6 +923,7 @@
   var LOCK_ON  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" style="color:var(--green)"><rect x="4" y="10.5" width="16" height="10.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 7.8-1.2"/></svg>';
 
   var tagState = {};
+  var lastState = {};
 
   /* ══ 履歴 ══════════════════════════════ */
 
@@ -894,28 +948,91 @@
     return String(h).split(".").map(decodeEntry).filter(Boolean);
   }
 
-  // 台帳タブ：タグが持っている履歴サマリ
-  function renderTagHist(state){
-    var list = decodeHist(state.h);
-    $("taghN").textContent = state.n ? "通算 " + state.n + " 回" : "記録なし";
-    if (!list.length) {
-      $("taghList").innerHTML = '<li class="empty">このタグには更新履歴が記録されていません。</li>';
+  function kindOf(k){ return KINDS[k] || null; }
+  function kindTag(k){
+    var o = kindOf(k);
+    return o ? '<span class="kbadge ' + o.cls + '">' + esc(o.label) + '</span>' : "";
+  }
+
+  // "260819IOKR" → { date, k, oc, name }
+  function parseHist(h){
+    if (!h) return [];
+    return String(h).split(".").filter(function(t){ return t.length >= 10; })
+      .slice(0, HIST_MAX_ON_TAG).map(function(t){
+        var ymd = t.slice(0,6), k = t.slice(6,7), oc = t.slice(7,10);
+        return {
+          raw: t.slice(0,10), k: k, oc: oc,
+          date: "20" + ymd.slice(0,2) + "-" + ymd.slice(2,4) + "-" + ymd.slice(4,6),
+          tab: ymd.slice(0,2) + "." + ymd.slice(2,4),
+          name: ORGS[oc] || ("コード " + oc)
+        };
+      });
+  }
+
+  // 台帳カードの回タブを組み立てる
+  function buildHistTabs(){
+    var box = $("histTabs"); box.innerHTML = "";
+    if (!histList.length) {
+      box.innerHTML = '<span class="none">履歴なし</span>';
       return;
     }
-    $("taghList").innerHTML = list.map(function(e, i){
-      var nm = ORGS[e.org];
-      return '<li data-date="' + e.date + '" data-kind="' + e.kind + '">' +
-             '<span class="kk ' + e.kind + '">' + kindLabel(e.kind) + '</span>' +
-             '<span>' + e.date + '</span>' +
-             '<span class="cd">' + esc(nm || e.org) + '</span>' +
-             '<span class="arw">' + (i === 0 ? '最新 ›' : '›') + '</span></li>';
-    }).join("");
+    histList.forEach(function(e, i){
+      var b = document.createElement("button");
+      b.type = "button"; b.setAttribute("role", "tab");
+      b.textContent = (HIST_LABEL[i] || (i + "回前")) + " " + e.tab;
+      b.setAttribute("aria-selected", i === histSel ? "true" : "false");
+      b.addEventListener("click", function(){ selectHist(i); });
+      box.appendChild(b);
+    });
+  }
 
-    var lis = $("taghList").querySelectorAll("li[data-date]");
-    for (var k = 0; k < lis.length; k++) {
-      (function(li){
-        li.addEventListener("click", function(){ openHistoryEntry(li.dataset.date, li.dataset.kind); });
-      })(lis[k]);
+  function selectHist(i){
+    if (i < 0 || i >= histList.length) return;
+    histSel = i;
+    buildHistTabs();
+    applyView();
+    buzz(12);
+  }
+
+  // 選択中の回に合わせて台帳の行と項目を描き替える
+  function applyView(){
+    var e = histList[histSel] || null;
+    var past = histSel > 0 && !!e;
+
+    FIELDS.forEach(function(f){
+      var val = lastState[f.key], kc = null;
+      if (f.key === "date") {
+        val = past ? e.date : (lastState.date || (e ? e.date : ""));
+        kc  = past ? e.k    : (e ? e.k : lastState.k);
+      } else if (f.key === "org") {
+        val = past ? e.name : (lastState.org || (e ? e.name : ""));
+      }
+      setRow(f.key, val, kc);
+    });
+
+    renderItems();
+
+    var n = $("histNote");
+    if (past) {
+      n.hidden = false;
+      n.textContent = HIST_LABEL[histSel] + "の記録 ／ " + e.date + " ／ " +
+        (kindOf(e.k) ? kindOf(e.k).label : "不明") + " ／ " + e.name +
+        "　（タグに入っているのは10文字の符号だけです。業者名は対照表で復元しました）";
+    } else if (histList.length) {
+      n.hidden = false;
+      n.textContent = "タグに記録されている履歴 " + histList.length +
+        " 件。上のタブで過去の記録に切り替えられます。";
+    } else {
+      n.hidden = true; n.textContent = "";
+    }
+  }
+
+  function setRow(key, val, kc){
+    var x = val && String(val).trim();
+    var dds = document.querySelectorAll('dd[data-k="' + key + '"]');
+    for (var i = 0; i < dds.length; i++) {
+      dds[i].innerHTML = esc(x || "") + (x && kc ? kindTag(kc) : "");
+      dds[i].className = x ? "" : "empty";
     }
   }
 
@@ -924,16 +1041,6 @@
   function renderHistory(){
     var wrap = $("histWrap");
     if (!wrap) return;
-
-    if (currentRole === "public") {
-      wrap.innerHTML = '<div class="locked">' + LOCK_BIG +
-        '<p><b>閲覧には権限が必要です</b>' +
-        '更新履歴は自治体・維持管理業者・改築業者のみが参照できます。' +
-        '「情報」タブで閲覧者を切り替えてください。</p></div>';
-      $("syncBtn").hidden = true;
-      $("histNote").textContent = "";
-      return;
-    }
 
     var all = localHist.concat(cloudHist);
     if (!all.length) {
@@ -972,18 +1079,14 @@
     var pend = localHist.length;
     $("syncBtn").hidden = pend === 0;
     $("syncBtn").textContent = "クラウドへ同期する（" + pend + "件）";
-    $("histNote").textContent = pend
+    var hn = $("histNote2");
+    if (hn) hn.textContent = pend
       ? "この端末で書き込んだ " + pend + " 件がまだクラウドに送られていません。通信が回復したら同期します。"
-      : "すべてクラウドと同期済みです。デモでは同期を疑似的に表現しています。";
+      : "更新の事実（いつ・誰が・何を）はタグから、所見と資料はクラウドから取得しています。";
   }
 
   // タグ内履歴の1行から、クラウド側の該当カードへ移動する
   function openHistoryEntry(date, kind){
-    if (!authed) {
-      toast("履歴の詳細は認証が必要です", "err");
-      $("login").hidden = false;
-      return;
-    }
     go("hist");
     buzz(12);
     setTimeout(function(){
@@ -1008,9 +1111,10 @@
       if (!r.ok) throw new Error("HTTP " + r.status);
       return r.json();
     }).then(function(j){
-      ORGS = j.orgs || {};
+      if (j.orgs) { for (var c in j.orgs) ORGS[c] = j.orgs[c]; }
       cloudHist = (j.records && j.records[pid]) || [];
-      renderTagHist(tagState);
+      buildHistTabs();
+      applyView();
       renderHistory();
     }).catch(function(e){
       cloudHist = [];
@@ -1070,12 +1174,57 @@
     updateWriteGate();
   }
 
+  /* ══ 書き込みの権限制御 ══════════════ */
+
+  // 履歴があれば「2回目以降」とみなす
+  function writeMode(){ return histList.length ? "update" : "new"; }
+  function editable(){ return writeMode() === "new" || unlocked; }
+
+  function applyLock(){
+    if (!$("wmodeTag")) return;
+    var upd = writeMode() === "update", open = editable();
+
+    var pi = $("f_pid");
+    if (pi) pi.disabled = upd;                    // 取付管IDは不変。解錠でも開かない
+
+    FIELDS.forEach(function(f){
+      if (!f.lock) return;
+      var ip = $("f_" + f.key);
+      if (ip) ip.disabled = !open;
+    });
+    GEO_KEYS.forEach(function(k){
+      var ip = $("f_" + k);
+      if (ip) ip.disabled = !open;
+    });
+    if (watchId == null) $("geoBtn").disabled = !open;
+
+    var ub = $("unlockBtn");
+    ub.hidden = !(upd && currentRole === "city");
+    ub.textContent = unlocked ? "台帳項目を再び施錠する" : "台帳項目を書き換える（自治体のみ）";
+    ub.classList.toggle("armed", unlocked);
+
+    var tag = $("wmodeTag"), txt = $("wmodeText");
+    if (!upd) {
+      tag.textContent = "NEW"; tag.className = "tg";
+      txt.innerHTML = "<b>新規登録</b><br>初回登録です。取付管IDを含む全項目を書き込みます。";
+    } else if (unlocked) {
+      tag.textContent = "UNLOCK"; tag.className = "tg unl";
+      txt.innerHTML = "<b>更新記録（台帳項目 解錠中）</b><br>取付管ID以外を書き換えられます。";
+    } else {
+      tag.textContent = "UPDATE"; tag.className = "tg upd";
+      txt.innerHTML = "<b>更新記録</b><br>更新日・更新者・種別だけを書き換えます。";
+    }
+
+    updateMeter();
+  }
+
   function updateWriteGate(){
     var sp = support();
     var blocked = !authed;
     $("writeBtn").disabled = blocked || !sp.ok;
     if (blocked) say("writeMsg", "タグへの書き込みには認証が必要です。上部の「ログイン」から権限を選んでください。", "err");
     else if (sp.ok) say("writeMsg", "入力してから書き込んでください。", "");
+    applyLock();
   }
 
   function buildRoles(){
@@ -1087,48 +1236,105 @@
     var role = null;
     ROLES.forEach(function(r){ if (r.key === key) role = r; });
     if (!role) return;
-    $("roleLead").textContent = role.lead;
-
-    var html = "", n = 0;
-    ITEMS.forEach(function(it){
-      var open = it.roles.indexOf(key) !== -1;
-      if (open) n++;
-
-      var tail;
-      if (!open)         tail = '<span class="go">非公開</span>';
-      else if (it.soon)  tail = '<span class="go">準備中</span>';
-      else if (it.links) tail = '<span class="gos">' + it.links.map(function(l){
-                           return '<a class="go" href="' + l.h + '" target="_blank" rel="noopener">' +
-                                  esc(l.t) + ' →</a>';
-                         }).join('') + '</span>';
-      else if (it.link)  tail = '<span class="go">開く →</span>';
-      else if (it.at)    tail = '<span class="go">表示中</span>';
-      else               tail = '<span class="go">閲覧可</span>';
-
-      var body = '<span class="k">' + (open ? LOCK_ON : LOCK_OFF) + '</span>' +
-                 '<span class="b"><span class="t">' + esc(it.t) + '</span>' +
-                 (SHOW_ITEM_DESC ? '<span class="d">' + esc(it.at || it.d) + '</span>' : '') +
-                 '</span>' + tail;
-
-      html += (open && it.link && !it.soon)
-        ? '<a class="item" href="' + it.link + '" target="_blank" rel="noopener">' + body + '</a>'
-        : '<div class="item' + (open ? '' : ' off') + '">' + body + '</div>';
-    });
-
-    $("roleItems").innerHTML = html;
-    $("tallyN").textContent = n;
-    $("tallyBar").style.width = (n / ITEMS.length * 100) + "%";
     currentRole = key;
+    if (unlocked && key !== "city") unlocked = false;   // 権限を降りたら再施錠
+    $("roleLead").textContent = role.lead;
+    renderItems();
     renderHistory();
+    applyLock();
   }
 
   var currentRole = "public";
+
+  /* ══ 閲覧できる情報（基本情報／回の記録）══ */
+
+  function baseItems(){
+    return ITEMS.filter(function(it){ return it.base; });
+  }
+
+  // 選択中の回に固有の記録
+  function recItems(){
+    var e = histList[histSel];
+    return ITEMS.filter(function(it){
+      if (it.base) return false;
+      if (!e || !it.kinds) return true;
+      return it.kinds.indexOf(e.k) !== -1;
+    });
+  }
+
+  // その基本情報が最後に更新された回。無ければ -1
+  function lastIdx(it){
+    for (var i = 0; i < histList.length; i++) {
+      if (!it.kinds || it.kinds.indexOf(histList[i].k) !== -1) return i;
+    }
+    return -1;
+  }
+
+  function itemHtml(it, extra){
+    var open = it.roles.indexOf(currentRole) !== -1;
+    var tail;
+    if (!open)         tail = '<span class="go">非公開</span>';
+    else if (it.soon)  tail = '<span class="go">準備中</span>';
+    else if (it.links) tail = '<span class="gos">' + it.links.map(function(l){
+                         return '<a class="go" href="' + l.h + '" target="_blank" rel="noopener">' +
+                                esc(l.t) + ' →</a>';
+                       }).join('') + '</span>';
+    else if (it.link)  tail = '<a class="go" href="' + it.link + '" target="_blank" rel="noopener">開く →</a>';
+    else               tail = '<span class="go">閲覧可</span>';
+    var desc = SHOW_ITEM_DESC ? '<span class="d">' + esc(it.at || it.d) + '</span>' : '';
+    return '<div class="item' + (open ? '' : ' off') + '">' +
+           '<span class="k">' + (open ? LOCK_ON : LOCK_OFF) + '</span>' +
+           '<span class="b"><span class="t">' + esc(it.t) + '</span>' + desc + (extra || '') + '</span>' +
+           tail + '</div>';
+  }
+
+  function renderItems(){
+    if (!$("baseItems")) return;
+    var base = baseItems(), rec = recItems(), e = histList[histSel];
+
+    $("baseCap").innerHTML = "<b>基本情報</b>" +
+      "<small>取付管IDに紐づく最新版。更新が何回あっても消えません</small>";
+    $("baseItems").innerHTML = base.map(function(it){
+      var i = lastIdx(it), h = histList[i], ex = "";
+      if (h) {
+        var o = kindOf(h.k);
+        ex = '<button class="srcbtn" data-i="' + i + '">最終更新 ' + esc(h.date) +
+             (o ? " " + esc(o.label) : "") + ' →</button>';
+      }
+      return itemHtml(it, ex);
+    }).join("");
+
+    $("recCap").innerHTML = e
+      ? "<b>この回の記録</b>" + kindTag(e.k) +
+        "<small>" + esc(e.date) + " ／ " + esc(e.name) + "</small>"
+      : "<b>この回の記録</b><small>履歴がまだありません</small>";
+    $("roleItems").innerHTML = rec.length
+      ? rec.map(function(it){ return itemHtml(it, ""); }).join("")
+      : '<div class="item off"><span class="b"><span class="t">この回に固有の記録はありません</span></span></div>';
+
+    [].forEach.call($("baseItems").querySelectorAll(".srcbtn"), function(b){
+      b.addEventListener("click", function(){
+        selectHist(parseInt(b.getAttribute("data-i"), 10));
+        go("site");
+      });
+    });
+
+    var shown = base.concat(rec);
+    var n = shown.filter(function(it){ return it.roles.indexOf(currentRole) !== -1; }).length;
+    $("tallyN").textContent = n;
+    $("tallyT").textContent = shown.length;
+    $("tallyBar").style.width = (shown.length ? n / shown.length * 100 : 0) + "%";
+  }
   var ACCOUNTS = [
     { role:"city",  name:"○○市 下水道課",   short:"自治体",       lv:"全情報" },
     { role:"maint", name:"○○管路工業",      short:"維持管理業者", lv:"調査データ" },
     { role:"renew", name:"□□工業",          short:"改築業者",     lv:"施工支援" }
   ];
   var authed = false;
+  var histList = [];      // タグから復元した履歴
+  var histSel  = 0;       // 表示中の回（0＝最新）
+  var unlocked = false;   // 自治体による台帳項目の解錠
+  var kind     = "I";     // 今回の更新種別
 
   /* ══ 表示 ══════════════════════════════ */
 
@@ -1140,18 +1346,16 @@
       origin === "url" ? "タグのURL"   :
       origin === "demo" ? "デモデータ"  : "未取得";
 
-    FIELDS.forEach(function(f){
-      var x = state[f.key] && String(state[f.key]).trim();
-      var dds = document.querySelectorAll('dd[data-k="' + f.key + '"]');
-      for (var i = 0; i < dds.length; i++) {
-        dds[i].textContent = x || "";
-        dds[i].className = x ? "" : "empty";
-      }
-    });
+    lastState = state || {};
+    histList = parseHist(state.h);
+    if (histSel >= histList.length) histSel = 0;
+    buildHistTabs();
+    applyView();
+
     $("abSub").textContent =
-      [state.site, state.date ? "最終点検 " + state.date : null].filter(Boolean).join(" ／ ") || "—";
+      [state.site, state.date ? "最終更新 " + state.date : null].filter(Boolean).join(" ／ ") || "—";
     tagState = state;
-    renderTagHist(state);
+    applyLock();
 
     if (state.lat && state.lng) {
       showGeo(parseFloat(state.lat), parseFloat(state.lng), state.acc ? parseFloat(state.acc) : null);
@@ -1299,9 +1503,10 @@
       if (v) s[f.key] = v;
     });
     // タグに載せる履歴（日付は最終点検日、無ければ今日）
-    var kind = $("f_evKind") ? $("f_evKind").value : "I";
+    kind = $("f_evKind") ? $("f_evKind").value : "I";
     var org  = $("f_evOrg") ? ($("f_evOrg").value || "").toUpperCase() : "";
     var when = s.date || new Date().toISOString().slice(0,10);
+    s.k = kind;
     var prev = decodeHist(tagState.h);
     var head = encodeEntry(when, kind, org);
     var list = [head].concat(prev.map(function(e){ return encodeEntry(e.date, e.kind, e.org); }));
@@ -1323,6 +1528,7 @@
     var p = new URLSearchParams();
     [PID].concat(FIELDS).forEach(function(f){ if (s[f.key]) p.set(f.key, s[f.key]); });
     GEO_KEYS.forEach(function(k){ if (s[k]) p.set(k, s[k]); });
+    if (s.k) p.set("k", s.k);
     if (s.n) p.set("n", s.n);
     if (s.h) p.set("h", s.h);
     if (geoMode) p.set("geo", "1");
@@ -1334,6 +1540,7 @@
     var o = { v: SCHEMA };
     [PID].concat(FIELDS).forEach(function(f){ if (s[f.key]) o[f.key] = s[f.key]; });
     GEO_KEYS.forEach(function(k){ if (s[k]) o[k] = s[k]; });
+    if (s.k) o.k = s.k;
     if (s.n) o.n = s.n;
     if (s.h) o.h = s.h;
     return JSON.stringify(o);
@@ -1620,6 +1827,11 @@
   $("resetBtn").addEventListener("click", backToStandby);
   $("fab").addEventListener("click", function(){ openScanner(); buzz(15); });
   $("syncBtn").addEventListener("click", syncHistory);
+  $("unlockBtn").addEventListener("click", function(){
+    if (unlocked) { unlocked = false; applyLock(); toast("台帳項目を施錠しました"); return; }
+    if (currentRole !== "city") { toast("台帳項目の書き換えは自治体のみです", "err"); return; }
+    unlocked = true; applyLock(); toast("台帳項目を解錠しました"); buzz([30,50,30]);
+  });
   $("authBtn").addEventListener("click", function(){ $("login").hidden = false; buzz(12); });
   $("loginClose").addEventListener("click", function(){ $("login").hidden = true; });
   $("logoutBtn").addEventListener("click", function(){
